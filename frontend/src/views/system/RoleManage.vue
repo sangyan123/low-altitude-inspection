@@ -1,9 +1,11 @@
 <template>
   <el-card>
     <div class="toolbar">
+      <el-input v-model="keyword" placeholder="搜索角色名称/编码/描述" style="width: 240px" clearable @clear="loadData" @keyup.enter="loadData" />
+      <el-button type="primary" @click="loadData">查询</el-button>
       <el-button type="success" @click="openCreate">新增角色</el-button>
     </div>
-    <el-table :data="list" v-loading="loading" border stripe>
+    <el-table :data="filteredList" v-loading="loading" border stripe>
       <el-table-column prop="id" label="ID" width="80" />
       <el-table-column prop="roleName" label="角色名称" width="150" />
       <el-table-column prop="roleCode" label="角色编码" width="150" />
@@ -24,6 +26,9 @@
         </template>
       </el-table-column>
     </el-table>
+    <div v-if="filteredList.length === 0 && !loading" style="text-align: center; color: #909399; padding: 20px">
+      没有匹配的角色
+    </div>
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="480px">
       <el-form :model="form" label-width="80px">
@@ -49,12 +54,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { getRoleList, createRole, updateRole, deleteRole } from "../../api/system";
 
 const list = ref<any[]>([]);
 const loading = ref(false);
+const keyword = ref("");
 const dialogVisible = ref(false);
 const isEdit = ref(false);
 
@@ -64,6 +70,18 @@ const form = reactive({
   roleCode: "",
   remark: "",
   status: 1,
+});
+
+/** 前端按关键词过滤（角色数量少，无需后端分页） */
+const filteredList = computed(() => {
+  const kw = keyword.value.trim();
+  if (!kw) return list.value;
+  return list.value.filter(
+    (r) =>
+      r.roleName.includes(kw) ||
+      (r.roleCode || "").includes(kw) ||
+      (r.remark || "").includes(kw)
+  );
 });
 
 async function loadData() {
@@ -113,5 +131,9 @@ onMounted(loadData);
 </script>
 
 <style scoped>
-.toolbar { margin-bottom: 16px; }
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
 </style>
