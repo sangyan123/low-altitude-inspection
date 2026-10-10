@@ -12,6 +12,7 @@ public class SysUser {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long deptId;
+    private Long roleId;
     private String username;
     private String password;
     private String realName;
@@ -23,3 +24,4 @@ public class SysUser {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }
+

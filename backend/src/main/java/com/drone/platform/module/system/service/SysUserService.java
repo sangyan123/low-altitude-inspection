@@ -19,17 +19,20 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Page<SysUser> page(int current, int size, Long deptId, String keyword) {
+    public Page<SysUser> page(int current, int size, Long deptId, Long roleId, String keyword) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         if (deptId != null) {
             wrapper.eq(SysUser::getDeptId, deptId);
+        }
+        if (roleId != null) {
+            wrapper.eq(SysUser::getRoleId, roleId);
         }
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(SysUser::getUsername, keyword)
                     .or().like(SysUser::getRealName, keyword)
                     .or().like(SysUser::getPhone, keyword));
         }
-        wrapper.orderByDesc(SysUser::getCreateTime);
+        wrapper.orderByAsc(SysUser::getId);
         Page<SysUser> page = page(new Page<>(current, size), wrapper);
         page.getRecords().forEach(u -> u.setPassword(null));
         return page;
@@ -75,3 +78,5 @@ public class SysUserService extends ServiceImpl<SysUserMapper, SysUser> {
         updateById(user);
     }
 }
+
+

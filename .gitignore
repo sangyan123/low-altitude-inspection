@@ -18,3 +18,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Vite 模板残留（未使用的默认文件）
+frontend/src/assets/
+frontend/src/components/HelloWorld.vue
+

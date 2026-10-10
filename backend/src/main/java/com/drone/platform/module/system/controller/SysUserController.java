@@ -23,8 +23,9 @@ public class SysUserController {
             @RequestParam(defaultValue = "1") int current,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long deptId,
+            @RequestParam(required = false) Long roleId,
             @RequestParam(required = false) String keyword) {
-        return Result.ok(PageResult.of(userService.page(current, size, deptId, keyword)));
+        return Result.ok(PageResult.of(userService.page(current, size, deptId, roleId, keyword)));
     }
 
     @GetMapping("/{id}")
@@ -58,3 +59,4 @@ public class SysUserController {
         return Result.ok();
     }
 }
+

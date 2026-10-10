@@ -45,6 +45,7 @@ DROP TABLE IF EXISTS `sys_user`;
 CREATE TABLE `sys_user` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
   `dept_id` BIGINT NOT NULL COMMENT '所属部门',
+  `role_id` BIGINT DEFAULT NULL COMMENT '角色ID',
   `username` VARCHAR(50) NOT NULL COMMENT '登录名',
   `password` VARCHAR(255) NOT NULL COMMENT '密码(BCrypt)',
   `real_name` VARCHAR(50) DEFAULT NULL COMMENT '姓名',
@@ -60,9 +61,9 @@ CREATE TABLE `sys_user` (
   KEY `idx_dept_id` (`dept_id`),
   CONSTRAINT `fk_user_dept` FOREIGN KEY (`dept_id`) REFERENCES `sys_dept` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
--- 初始管理员账号（用户名: admin 密码: admin123）
-INSERT INTO `sys_user` (`dept_id`, `username`, `password`, `real_name`, `phone`, `status`) VALUES
-(1, 'admin', '$2b$10$NNdDI0z2/lhyrFHK1TsFNeQy1tIdYnwjZvAWeSmwCdASfHQUXOrFu', '系统管理员', '13800000000', 1);
+-- 初始管理员账号（用户名: admin 密码: admin123，角色: 超级管理员）
+INSERT INTO `sys_user` (`dept_id`, `role_id`, `username`, `password`, `real_name`, `phone`, `status`) VALUES
+(1, 1, 'admin', '$2b$10$NNdDI0z2/lhyrFHK1TsFNeQy1tIdYnwjZvAWeSmwCdASfHQUXOrFu', '系统管理员', '13800000000', 1);
 
 -- 3. 角色表
 DROP TABLE IF EXISTS `sys_role`;
