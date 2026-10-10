@@ -20,10 +20,18 @@
           <template #title>
             <el-icon><Setting /></el-icon><span>系统管理</span>
           </template>
-          <el-menu-item index="/system/dept">组织管理</el-menu-item>
-          <el-menu-item index="/system/user">账户管理</el-menu-item>
-          <el-menu-item index="/system/role">角色管理</el-menu-item>
-          <el-menu-item index="/system/device">无人机管理</el-menu-item>
+          <el-menu-item index="/system/dept">
+            <el-icon><OfficeBuilding /></el-icon>部门管理
+          </el-menu-item>
+          <el-menu-item index="/system/user">
+            <el-icon><User /></el-icon>账户管理
+          </el-menu-item>
+          <el-menu-item index="/system/role">
+            <el-icon><Avatar /></el-icon>角色管理
+          </el-menu-item>
+          <el-menu-item index="/system/device">
+            <el-icon><Promotion /></el-icon>无人机管理
+          </el-menu-item>
         </el-sub-menu>
       </el-menu>
     </el-aside>
@@ -124,3 +132,5 @@ function logout() {
   overflow-y: auto;
 }
 </style>
+
+

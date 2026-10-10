@@ -13,22 +13,58 @@
           <el-tag :type="row.status === 1 ? 'success' : 'danger'">{{ row.status === 1 ? '启用' : '停用' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openEdit(row)">编辑</el-button>
+          <el-popconfirm title="确定删除该角色？" @confirm="handleDelete(row.id)">
+            <template #reference>
+              <el-button size="small" type="danger">删除</el-button>
+            </template>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
+
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="480px">
+      <el-form :model="form" label-width="80px">
+        <el-form-item label="角色名称" required>
+          <el-input v-model="form.roleName" placeholder="如：部门管理员" />
+        </el-form-item>
+        <el-form-item label="角色编码" required>
+          <el-input v-model="form.roleCode" placeholder="如：dept_admin" :disabled="isEdit" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="form.remark" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-switch v-model="form.status" :active-value="1" :inactive-value="0" active-text="启用" inactive-text="停用" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSave">确定</el-button>
+      </template>
+    </el-dialog>
   </el-card>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
-import { getRoleList } from "../../api/system";
+import { getRoleList, createRole, updateRole, deleteRole } from "../../api/system";
 
 const list = ref<any[]>([]);
 const loading = ref(false);
+const dialogVisible = ref(false);
+const isEdit = ref(false);
+
+const form = reactive({
+  id: null as number | null,
+  roleName: "",
+  roleCode: "",
+  remark: "",
+  status: 1,
+});
 
 async function loadData() {
   loading.value = true;
@@ -40,8 +76,38 @@ async function loadData() {
   }
 }
 
-function openCreate() { ElMessage.info("新增角色功能待实现"); }
-function openEdit(_row: any) { ElMessage.info("编辑角色功能待实现"); }
+function openCreate() {
+  isEdit.value = false;
+  Object.assign(form, { id: null, roleName: "", roleCode: "", remark: "", status: 1 });
+  dialogVisible.value = true;
+}
+
+function openEdit(row: any) {
+  isEdit.value = true;
+  Object.assign(form, row);
+  dialogVisible.value = true;
+}
+
+async function handleSave() {
+  if (!form.roleName || !form.roleCode) {
+    ElMessage.warning("请填写角色名称和编码");
+    return;
+  }
+  if (isEdit.value) {
+    await updateRole(form);
+  } else {
+    await createRole(form);
+  }
+  ElMessage.success("保存成功");
+  dialogVisible.value = false;
+  loadData();
+}
+
+async function handleDelete(id: number) {
+  await deleteRole(id);
+  ElMessage.success("删除成功");
+  loadData();
+}
 
 onMounted(loadData);
 </script>

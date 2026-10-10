@@ -23,10 +23,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="lastLoginTime" label="最后登录" width="170" />
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="300" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="openEdit(row)">编辑</el-button>
           <el-button size="small" type="warning" @click="openResetPwd(row)">重置密码</el-button>
+          <el-button size="small" type="primary" plain @click="openAssignRole(row)">分配角色</el-button>
           <el-popconfirm title="确定删除该用户？" @confirm="handleDelete(row.id)">
             <template #reference>
               <el-button size="small" type="danger">删除</el-button>
@@ -90,7 +91,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
-import { getDeptList, getUserPage, createUser, updateUser, deleteUser, resetPassword } from "../../api/system";
+import { getDeptList, getUserPage, createUser, updateUser, deleteUser, resetPassword, getRoleList, getUserRoles, assignRoles } from "../../api/system";
 
 const list = ref<any[]>([]);
 const deptList = ref<any[]>([]);
@@ -101,6 +102,10 @@ const resetPwdVisible = ref(false);
 const isEdit = ref(false);
 const resetPwdUserId = ref<number | null>(null);
 const newPassword = ref("");
+const assignRoleVisible = ref(false);
+const assignRoleUserId = ref<number | null>(null);
+const roleList = ref<any[]>([]);
+const selectedRoleIds = ref<number[]>([]);
 
 const query = reactive({ current: 1, size: 10, deptId: null as number | null, keyword: "" });
 
@@ -175,6 +180,26 @@ async function handleResetPwd() {
   resetPwdVisible.value = false;
 }
 
+async function loadRoles() {
+  const res: any = await getRoleList();
+  roleList.value = res.data;
+}
+
+function openAssignRole(row: any) {
+  assignRoleUserId.value = row.id;
+  loadRoles().then(async () => {
+    const res: any = await getUserRoles(row.id);
+    selectedRoleIds.value = res.data;
+  });
+  assignRoleVisible.value = true;
+}
+
+async function handleAssignRole() {
+  await assignRoles(assignRoleUserId.value!, selectedRoleIds.value);
+  ElMessage.success("角色分配成功");
+  assignRoleVisible.value = false;
+}
+
 async function handleDelete(id: number) {
   await deleteUser(id);
   ElMessage.success("删除成功");
@@ -194,3 +219,4 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 </style>
+

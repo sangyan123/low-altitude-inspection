@@ -40,6 +40,15 @@ export function resetPassword(id: number, password: string) {
 export function getRoleList() {
   return request.get("/system/role/list");
 }
+export function createRole(data: any) {
+  return request.post("/system/role", data);
+}
+export function updateRole(data: any) {
+  return request.put("/system/role", data);
+}
+export function deleteRole(id: number) {
+  return request.delete(`/system/role/${id}`);
+}
 export function getUserRoles(userId: number) {
   return request.get(`/system/role/user/${userId}`);
 }
@@ -60,3 +69,5 @@ export function updateDevice(data: any) {
 export function deleteDevice(id: number) {
   return request.delete(`/device/${id}`);
 }
+
+
