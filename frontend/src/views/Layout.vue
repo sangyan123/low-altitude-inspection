@@ -16,6 +16,15 @@
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon><span>首页大屏</span>
         </el-menu-item>
+        <el-sub-menu index="task">
+          <template #title>
+            <el-icon><Tickets /></el-icon><span>任务管理</span>
+          </template>
+          <el-menu-item index="/task/patrol">巡检任务</el-menu-item>
+          <el-menu-item index="/task/transport">运输任务</el-menu-item>
+          <el-menu-item index="/task/route">航线库</el-menu-item>
+          <el-menu-item index="/task/plan">飞行计划</el-menu-item>
+        </el-sub-menu>
         <el-sub-menu index="system">
           <template #title>
             <el-icon><Setting /></el-icon><span>系统管理</span>
@@ -132,5 +141,3 @@ function logout() {
   overflow-y: auto;
 }
 </style>
-
-
