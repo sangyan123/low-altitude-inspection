@@ -23,7 +23,7 @@
 
     <!-- 地图主体 -->
     <div class="map-wrap">
-      <GisMap :base-type="baseType" @ready="onMapReady" />
+      <GisMap :base-type="baseType" :auto-locate="true" @ready="onMapReady" />
       <!-- 底图切换 -->
       <div class="map-switch">
         <el-radio-group v-model="baseType" size="small">

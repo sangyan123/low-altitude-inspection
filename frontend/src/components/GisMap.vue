@@ -15,6 +15,8 @@ const props = withDefaults(
     /** 初始中心点，业务坐标（WGS-84）：[经度, 纬度] */
     center?: [number, number];
     zoom?: number;
+    /** 初始化后自动定位到当前设备位置 */
+    autoLocate?: boolean;
   }>(),
   { baseType: "vec", center: [101.72, 26.58], zoom: 11 }
 );
@@ -50,6 +52,18 @@ onMounted(() => {
     attributionControl: false,
   });
   loadTiles(props.baseType);
+  if (props.autoLocate && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        // 浏览器返回WGS-84坐标
+        const [lng, lat] = toMapCoord(pos.coords.longitude, pos.coords.latitude, getMapSource(props.baseType).coordSystem);
+        map!.setView([lat, lng], 13);
+        L.circle([lat, lng], { radius: pos.coords.accuracy || 500, color: "#409eff", weight: 1, fillOpacity: 0.08 }).addTo(map!);
+      },
+      () => {/* 用户拒绝或定位失败，保持默认中心 */ },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  }
   emit("ready", map);
 });
 
