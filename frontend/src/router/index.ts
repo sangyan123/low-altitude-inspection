@@ -14,6 +14,7 @@ const router = createRouter({
       redirect: "/dashboard",
       children: [
         { path: "dashboard", name: "Dashboard", component: () => import("../views/dashboard/Dashboard.vue"), meta: { title: "首页大屏" } },
+        { path: "flight-situation", name: "FlightSituation", component: () => import("../views/flight/FlightSituation.vue"), meta: { title: "飞行态势" } },
         { path: "task/patrol", name: "PatrolTask", component: () => import("../views/task/PatrolTask.vue"), meta: { title: "巡检任务" } },
         { path: "task/transport", name: "TransportTask", component: () => import("../views/task/TransportTask.vue"), meta: { title: "运输任务" } },
         { path: "task/route", name: "RouteLibrary", component: () => import("../views/task/RouteLibrary.vue"), meta: { title: "航线库" } },
@@ -37,3 +38,4 @@ router.beforeEach((to, _from, next) => {
 });
 
 export default router;
+

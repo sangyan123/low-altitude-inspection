@@ -164,10 +164,9 @@ CREATE TABLE `sys_config` (
   UNIQUE KEY `uk_config_key` (`config_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='系统配置表';
 
--- 预置高德地图配置
+-- 预置天地图配置
 INSERT INTO `sys_config` (`config_key`, `config_value`, `remark`) VALUES
-('amap_key', '', '高德地图 Web端(JS API) Key'),
-('amap_security_code', '', '高德地图安全密钥');
+('tianditu_key', '', '天地图浏览器端Key');
 
 -- 8. 操作日志表
 DROP TABLE IF EXISTS `sys_oper_log`;
@@ -656,4 +655,5 @@ CREATE TABLE `sys_notification` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='系统通知表';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
 

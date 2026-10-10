@@ -16,6 +16,9 @@
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon><span>首页大屏</span>
         </el-menu-item>
+        <el-menu-item index="/flight-situation">
+          <el-icon><Location /></el-icon><span>飞行态势</span>
+        </el-menu-item>
         <el-sub-menu index="task">
           <template #title>
             <el-icon><Tickets /></el-icon><span>任务管理</span>
@@ -149,4 +152,5 @@ function logout() {
   overflow-y: auto;
 }
 </style>
+
 
