@@ -20,10 +20,18 @@
           <template #title>
             <el-icon><Tickets /></el-icon><span>任务管理</span>
           </template>
-          <el-menu-item index="/task/patrol">巡检任务</el-menu-item>
-          <el-menu-item index="/task/transport">运输任务</el-menu-item>
-          <el-menu-item index="/task/route">航线库</el-menu-item>
-          <el-menu-item index="/task/plan">飞行计划</el-menu-item>
+          <el-menu-item index="/task/patrol">
+            <el-icon><Compass /></el-icon>巡检任务
+          </el-menu-item>
+          <el-menu-item index="/task/transport">
+            <el-icon><Box /></el-icon>运输任务
+          </el-menu-item>
+          <el-menu-item index="/task/route">
+            <el-icon><Guide /></el-icon>航线库
+          </el-menu-item>
+          <el-menu-item index="/task/plan">
+            <el-icon><Calendar /></el-icon>飞行计划
+          </el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="system">
           <template #title>
@@ -141,3 +149,4 @@ function logout() {
   overflow-y: auto;
 }
 </style>
+
