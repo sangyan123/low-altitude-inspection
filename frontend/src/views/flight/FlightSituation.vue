@@ -23,7 +23,7 @@
 
     <!-- 地图主体 -->
     <div class="map-wrap">
-      <GisMap :tk="tk" :base-type="baseType" @ready="onMapReady" />
+      <GisMap :base-type="baseType" @ready="onMapReady" />
       <!-- 底图切换 -->
       <div class="map-switch">
         <el-radio-group v-model="baseType" size="small">
@@ -66,7 +66,6 @@ import type L from "leaflet";
 import GisMap from "../../components/GisMap.vue";
 import { getDevicePage } from "../../api/system";
 
-const tk = import.meta.env.VITE_TIANDITU_KEY as string;
 const baseType = ref<"vec" | "img">("vec");
 
 const devices = ref<any[]>([]);
@@ -220,6 +219,7 @@ onBeforeUnmount(() => {
   position: relative;
   border-radius: 6px;
   overflow: hidden;
+  min-height: 500px;
 }
 .map-switch {
   position: absolute;
@@ -249,4 +249,5 @@ onBeforeUnmount(() => {
   padding: 20px 0;
 }
 </style>
+
 

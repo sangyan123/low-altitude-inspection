@@ -4,14 +4,15 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { L, createTiandituLayers } from "../utils/tianditu";
+import L from "leaflet";
+import { getMapSource } from "../utils/mapSource";
+import { toMapCoord } from "../utils/coord";
 
 const props = withDefaults(
   defineProps<{
-    /** 天地图Key */
-    tk: string;
     /** 底图类型：vec矢量 / img影像 */
     baseType?: "vec" | "img";
+    /** 初始中心点，业务坐标（WGS-84）：[经度, 纬度] */
     center?: [number, number];
     zoom?: number;
   }>(),
@@ -22,37 +23,46 @@ const emit = defineEmits<{ (e: "ready", map: L.Map): void }>();
 
 const mapContainer = ref<HTMLElement>();
 let map: L.Map | null = null;
+let tileLayers: L.TileLayer[] = [];
+
+function loadTiles(baseType: "vec" | "img") {
+  if (!map) return;
+  tileLayers.forEach((layer) => map!.removeLayer(layer));
+  tileLayers = [];
+  const source = getMapSource(baseType);
+  tileLayers = source.tileUrls.map(
+    (url) =>
+      L.tileLayer(url, {
+        subdomains: source.subdomains,
+        maxZoom: source.maxZoom,
+      }).addTo(map!)
+  );
+}
 
 onMounted(() => {
   if (!mapContainer.value) return;
-  const layers = createTiandituLayers(props.tk, props.baseType);
+  // Leaflet center 格式为 [纬度, 经度]
+  const [lng, lat] = toMapCoord(props.center[0], props.center[1], getMapSource(props.baseType).coordSystem);
   map = L.map(mapContainer.value, {
-    center: props.center,
+    center: [lat, lng],
     zoom: props.zoom,
     zoomControl: true,
     attributionControl: false,
   });
-  layers.forEach((layer) => layer.addTo(map!));
+  loadTiles(props.baseType);
   emit("ready", map);
 });
 
 // 底图类型切换
 watch(
   () => props.baseType,
-  (type) => {
-    if (!map) return;
-    map.eachLayer((layer) => map!.removeLayer(layer));
-    createTiandituLayers(props.tk, type).forEach((layer) => layer.addTo(map!));
-  }
+  (type) => loadTiles(type)
 );
 
 onBeforeUnmount(() => {
-  try {
-    map?.remove();
-  } catch {
-    /* 已被销毁则忽略 */
-  }
+  map?.remove();
   map = null;
+  tileLayers = [];
 });
 
 defineExpose({ getMap: () => map });
@@ -60,9 +70,7 @@ defineExpose({ getMap: () => map });
 
 <style scoped>
 .gis-map {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
+  position: absolute;
+  inset: 0;
 }
 </style>
-
