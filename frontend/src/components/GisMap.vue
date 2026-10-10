@@ -47,7 +47,11 @@ watch(
 );
 
 onBeforeUnmount(() => {
-  map?.remove();
+  try {
+    map?.remove();
+  } catch {
+    /* 已被销毁则忽略 */
+  }
   map = null;
 });
 
@@ -61,3 +65,4 @@ defineExpose({ getMap: () => map });
   min-height: 400px;
 }
 </style>
+

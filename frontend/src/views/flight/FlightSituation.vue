@@ -155,8 +155,7 @@ function locateDevice(d: any) {
 
 onMounted(() => {});
 onBeforeUnmount(() => {
-  if (timer) window.clearInterval(timer);
-  map?.remove();
+  if (timer) window.clearInterval(timer); // 地图销毁由GisMap组件负责
 });
 </script>
 
@@ -250,3 +249,4 @@ onBeforeUnmount(() => {
   padding: 20px 0;
 }
 </style>
+
