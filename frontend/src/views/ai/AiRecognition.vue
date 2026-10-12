@@ -71,6 +71,7 @@
             </el-form-item>
             <el-form-item label="识别引擎">
               <el-select v-model="form.provider" style="width: 100%">
+                <el-option label="智谱 GLM 视觉识别" value="glm" />
                 <el-option label="Mock 模拟识别" value="mock" />
               </el-select>
             </el-form-item>
@@ -100,6 +101,7 @@
           <el-option label="误报" :value="3" />
         </el-select>
         <el-select v-model="query.provider" placeholder="识别引擎" clearable style="width: 150px" @change="loadData">
+          <el-option label="GLM" value="glm" />
           <el-option label="Mock" value="mock" />
         </el-select>
         <el-input
