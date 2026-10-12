@@ -110,6 +110,22 @@
                 <div class="overview-value">{{ stats?.planPending ?? 0 }}</div>
               </div>
               <div class="overview-item">
+                <div class="overview-label">事件总数</div>
+                <div class="overview-value">{{ stats?.eventTotal ?? 0 }}</div>
+              </div>
+              <div class="overview-item">
+                <div class="overview-label">待处置事件</div>
+                <div class="overview-value">{{ stats?.eventPending ?? 0 }}</div>
+              </div>
+              <div class="overview-item">
+                <div class="overview-label">事件已销号</div>
+                <div class="overview-value">{{ stats?.eventClosed ?? 0 }}</div>
+              </div>
+              <div class="overview-item">
+                <div class="overview-label">今日事件</div>
+                <div class="overview-value">{{ stats?.todayEventCount ?? 0 }}</div>
+              </div>
+              <div class="overview-item">
                 <div class="overview-label">平均电量</div>
                 <div class="overview-value">{{ avgBatteryText }}</div>
               </div>
@@ -122,6 +138,8 @@
               <el-progress :percentage="transportRate" :stroke-width="10" />
               <div class="progress-title">计划通过率</div>
               <el-progress :percentage="planRate" :stroke-width="10" />
+              <div class="progress-title">事件销号率</div>
+              <el-progress :percentage="eventRate" :stroke-width="10" />
             </div>
           </el-card>
         </div>
@@ -215,6 +233,8 @@ const statCards = computed(() => [
   { label: "今日任务", value: stats.value?.todayTaskCount ?? 0, note: "巡检 + 运输", icon: "Calendar", color: "#7367f0" },
   { label: "执行中任务", value: stats.value?.activeTaskCount ?? 0, note: `运输中 ${stats.value?.transportActive ?? 0} 单`, icon: "Tickets", color: "#ff9f43" },
   { label: "待审计划", value: stats.value?.planPending ?? 0, note: `计划总数 ${stats.value?.planTotal ?? 0}`, icon: "DocumentChecked", color: "#f56c6c" },
+  { label: "事件总数", value: stats.value?.eventTotal ?? 0, note: `待处置 ${stats.value?.eventPending ?? 0} 起`, icon: "Warning", color: "#f56c6c" },
+  { label: "已销号事件", value: stats.value?.eventClosed ?? 0, note: `今日新增 ${stats.value?.todayEventCount ?? 0} 起`, icon: "CircleCheck", color: "#67c23a" },
 ]);
 
 const patrolRate = computed(() => {
@@ -225,6 +245,11 @@ const patrolRate = computed(() => {
 const transportRate = computed(() => {
   const total = stats.value?.transportTotal ?? 0;
   return total ? Math.round(((stats.value?.transportSigned ?? 0) / total) * 100) : 0;
+});
+
+const eventRate = computed(() => {
+  const total = stats.value?.eventTotal ?? 0;
+  return total ? Math.round(((stats.value?.eventClosed ?? 0) / total) * 100) : 0;
 });
 
 const planRate = computed(() => {

@@ -42,6 +42,14 @@ export interface DashboardStats {
   planApproved: number;
   planRejected: number;
 
+  eventTotal: number;
+  eventPending: number;
+  eventDispatched: number;
+  eventHandled: number;
+  eventVerified: number;
+  eventClosed: number;
+  todayEventCount: number;
+  activeEventCount: number;
   todayTaskCount: number;
   activeTaskCount: number;
   devices: DashboardDevice[];

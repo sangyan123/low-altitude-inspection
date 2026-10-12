@@ -38,6 +38,16 @@ public class DashboardStatsVO {
     private long planApproved;
     private long planRejected;
 
+    /** 事件统计：0待处置 1已派单 2已处置 3已核验 4已销号 */
+    private long eventTotal;
+    private long eventPending;
+    private long eventDispatched;
+    private long eventHandled;
+    private long eventVerified;
+    private long eventClosed;
+    private long todayEventCount;
+    private long activeEventCount;
+
     /** 今日新增巡检 + 运输任务 */
     private long todayTaskCount;
     /** 当前执行中的巡检 + 运输任务 */

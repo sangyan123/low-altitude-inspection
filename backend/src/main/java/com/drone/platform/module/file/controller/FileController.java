@@ -27,7 +27,7 @@ import java.util.UUID;
 @RequestMapping("/file")
 public class FileController {
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "mp4", "mov", "avi", "obj", "glb", "gltf", "fbx", "tif", "tiff", "las", "laz", "zip", "json", "b3dm");
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -45,7 +45,7 @@ public class FileController {
         String originalName = file.getOriginalFilename();
         String extension = getExtension(originalName);
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BusinessException("仅支持 JPG、JPEG、PNG、WEBP 图片");
+            throw new BusinessException("仅支持图片、视频或三维/点云成果文件");
         }
 
         String datePath = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));

@@ -531,7 +531,7 @@ CREATE TABLE `flight_record` (
 DROP TABLE IF EXISTS `data_result`;
 CREATE TABLE `data_result` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `flight_record_id` BIGINT NOT NULL COMMENT '关联飞行记录',
+  `flight_record_id` BIGINT NULL COMMENT '关联飞行记录，人工上传可为空',
   `data_type` TINYINT NOT NULL COMMENT '1视频 2照片 3DOM 4DSM 5点云 6三维模型',
   `file_name` VARCHAR(200) DEFAULT NULL COMMENT '文件名',
   `file_url` VARCHAR(500) NOT NULL COMMENT '文件路径',
@@ -543,11 +543,15 @@ CREATE TABLE `data_result` (
   `lat` DECIMAL(10,6) DEFAULT NULL COMMENT '纬度(GCJ-02)',
   `dept_id` BIGINT DEFAULT NULL COMMENT '归属部门',
   `auth_scope` VARCHAR(500) DEFAULT NULL COMMENT '授权范围(部门ID逗号分隔,空=公开)',
+  `submit_user_id` BIGINT DEFAULT NULL COMMENT '上传人',
+  `remark` VARCHAR(500) DEFAULT NULL COMMENT '备注',
+  `update_time` DATETIME DEFAULT NULL COMMENT '更新时间',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
   PRIMARY KEY (`id`),
   KEY `idx_flight_record` (`flight_record_id`),
   KEY `idx_data_type` (`data_type`),
   KEY `idx_dept_id` (`dept_id`),
+  KEY `idx_submit_user` (`submit_user_id`),
   CONSTRAINT `fk_result_flight` FOREIGN KEY (`flight_record_id`) REFERENCES `flight_record` (`id`),
   CONSTRAINT `fk_result_dept` FOREIGN KEY (`dept_id`) REFERENCES `sys_dept` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='成果文件表';

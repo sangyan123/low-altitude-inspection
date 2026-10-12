@@ -49,4 +49,4 @@ logging:
 app:
   upload:
     dir: uploads
-    max-size-mb: 20
+    max-size-mb: 200

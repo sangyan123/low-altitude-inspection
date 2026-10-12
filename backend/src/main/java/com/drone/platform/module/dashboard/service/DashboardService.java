@@ -2,6 +2,8 @@ package com.drone.platform.module.dashboard.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.drone.platform.module.dashboard.vo.DashboardStatsVO;
+import com.drone.platform.module.event.entity.EventInfo;
+import com.drone.platform.module.event.mapper.EventInfoMapper;
 import com.drone.platform.module.device.entity.UavDevice;
 import com.drone.platform.module.device.mapper.UavDeviceMapper;
 import com.drone.platform.module.task.entity.FlightPlan;
@@ -29,6 +31,7 @@ public class DashboardService {
     private final PatrolTaskMapper patrolTaskMapper;
     private final TransportTaskMapper transportTaskMapper;
     private final FlightPlanMapper flightPlanMapper;
+    private final EventInfoMapper eventInfoMapper;
 
     public DashboardStatsVO getStats() {
         DashboardStatsVO stats = new DashboardStatsVO();
@@ -36,6 +39,7 @@ public class DashboardService {
         fillPatrolStats(stats);
         fillTransportStats(stats);
         fillPlanStats(stats);
+        fillEventStats(stats);
         fillTodayStats(stats);
         return stats;
     }
@@ -129,6 +133,17 @@ public class DashboardService {
         stats.setPlanPending(count(flightPlanMapper, FlightPlan::getApprovalStatus, 0));
         stats.setPlanApproved(count(flightPlanMapper, FlightPlan::getApprovalStatus, 1));
         stats.setPlanRejected(count(flightPlanMapper, FlightPlan::getApprovalStatus, 2));
+    }
+
+    private void fillEventStats(DashboardStatsVO stats) {
+        stats.setEventTotal(count(eventInfoMapper, null));
+        stats.setEventPending(count(eventInfoMapper, EventInfo::getStatus, 0));
+        stats.setEventDispatched(count(eventInfoMapper, EventInfo::getStatus, 1));
+        stats.setEventHandled(count(eventInfoMapper, EventInfo::getStatus, 2));
+        stats.setEventVerified(count(eventInfoMapper, EventInfo::getStatus, 3));
+        stats.setEventClosed(count(eventInfoMapper, EventInfo::getStatus, 4));
+        stats.setTodayEventCount(count(eventInfoMapper, EventInfo::getCreateTime, LocalDate.now().atStartOfDay()));
+        stats.setActiveEventCount(stats.getEventPending() + stats.getEventDispatched());
     }
 
     private void fillTodayStats(DashboardStatsVO stats) {
