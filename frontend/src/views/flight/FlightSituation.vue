@@ -62,8 +62,9 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from "vue";
-import type L from "leaflet";
+import L from "leaflet";
 import GisMap from "../../components/GisMap.vue";
+import { createDeviceMarkerIcon } from "../../utils/deviceMarker";
 import { getDevicePage } from "../../api/system";
 
 const baseType = ref<"vec" | "img">("vec");
@@ -79,20 +80,10 @@ const commName = (c: number) => ({ 0: "离线", 1: "4G", 2: "5G", 3: "自组网"
 const statusName = (s: number) => ({ 0: "离线", 1: "在线", 2: "飞行中", 3: "充电中", 4: "维护中" }[s] || "-");
 const statusTag = (s: number) => ({ 0: "info", 1: "success", 2: "primary", 3: "warning", 4: "danger" }[s] || "info");
 
-const statusColor: Record<number, string> = {
-  0: "#909399", 1: "#67c23a", 2: "#409eff", 3: "#e6a23c", 4: "#f56c6c",
-};
+
 
 function deviceIcon(d: any): L.DivIcon {
-  const color = statusColor[d.status] || "#909399";
-  return L.divIcon({
-    className: "",
-    html: `<div style="position:relative;text-align:center">
-      <div style="width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 8px ${color};margin:0 auto"></div>
-      <div style="font-size:11px;color:#fff;background:rgba(0,0,0,.55);border-radius:4px;padding:1px 4px;margin-top:2px;white-space:nowrap">${d.deviceName}</div>
-    </div>`,
-    iconSize: [0, 0],
-  });
+  return createDeviceMarkerIcon(d);
 }
 
 function onMapReady(m: L.Map) {

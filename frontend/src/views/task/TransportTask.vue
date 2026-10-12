@@ -160,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { getDeptList, getDevicePage } from "../../api/system";
 import {
@@ -204,11 +204,6 @@ const emptyForm = {
 };
 const form = reactive({ ...emptyForm });
 
-const deptMap = computed(() => {
-  const m: Record<number, string> = {};
-  deptList.value.forEach((d) => (m[d.id] = d.deptName));
-  return m;
-});
 
 const typeName = (t: number) => ({ 1: "血液运输", 2: "疾控样本", 3: "救援物资" }[t] || "-");
 const typeTag = (t: number) => ({ 1: "danger", 2: "warning", 3: "primary" }[t] || "info");

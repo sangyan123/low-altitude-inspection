@@ -18,7 +18,7 @@ const props = withDefaults(
     /** 初始化后自动定位到当前设备位置 */
     autoLocate?: boolean;
   }>(),
-  { baseType: "vec", center: [101.72, 26.58], zoom: 11 }
+  { baseType: "vec", center: () => [101.72, 26.58] as [number, number], zoom: 11 }
 );
 
 const emit = defineEmits<{ (e: "ready", map: L.Map): void }>();
@@ -26,6 +26,7 @@ const emit = defineEmits<{ (e: "ready", map: L.Map): void }>();
 const mapContainer = ref<HTMLElement>();
 let map: L.Map | null = null;
 let tileLayers: L.TileLayer[] = [];
+let resizeObserver: ResizeObserver | null = null;
 
 function loadTiles(baseType: "vec" | "img") {
   if (!map) return;
@@ -52,6 +53,13 @@ onMounted(() => {
     attributionControl: false,
   });
   loadTiles(props.baseType);
+
+  // Tab 切换或容器尺寸变化时，Leaflet 必须重新计算尺寸，否则底图只会渲染初始尺寸
+  resizeObserver = new ResizeObserver(() => {
+    map?.invalidateSize();
+  });
+  resizeObserver.observe(mapContainer.value);
+  window.setTimeout(() => map?.invalidateSize(), 120);
   if (props.autoLocate && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -74,6 +82,8 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = null;
   map?.remove();
   map = null;
   tileLayers = [];
