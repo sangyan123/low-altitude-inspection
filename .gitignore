@@ -23,3 +23,6 @@ Thumbs.db
 frontend/src/assets/
 frontend/src/components/HelloWorld.vue
 
+
+# 运行时上传文件
+backend/uploads/

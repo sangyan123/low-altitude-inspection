@@ -36,6 +36,17 @@
             <el-icon><Calendar /></el-icon>飞行计划
           </el-menu-item>
         </el-sub-menu>
+        <el-sub-menu index="ai">
+          <template #title>
+            <el-icon><MagicStick /></el-icon><span>AI识别中心</span>
+          </template>
+          <el-menu-item index="/ai/algorithm">
+            <el-icon><Operation /></el-icon>算法管理
+          </el-menu-item>
+          <el-menu-item index="/ai/result">
+            <el-icon><Picture /></el-icon>AI识别结果
+          </el-menu-item>
+        </el-sub-menu>
         <el-sub-menu index="system">
           <template #title>
             <el-icon><Setting /></el-icon><span>系统管理</span>

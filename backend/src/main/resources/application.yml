@@ -45,3 +45,8 @@ logging:
     com.drone.platform: debug
 
 
+
+app:
+  upload:
+    dir: uploads
+    max-size-mb: 20

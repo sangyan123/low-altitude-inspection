@@ -468,7 +468,7 @@ INSERT INTO `ai_algorithm` (`algo_name`, `algo_category`, `algo_desc`) VALUES
 DROP TABLE IF EXISTS `ai_recognition_result`;
 CREATE TABLE `ai_recognition_result` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `flight_record_id` BIGINT NOT NULL COMMENT '关联飞行记录',
+  `flight_record_id` BIGINT NULL COMMENT '关联飞行记录，人工上传可为空',
   `algo_id` BIGINT NOT NULL COMMENT '识别算法',
   `image_url` VARCHAR(500) DEFAULT NULL COMMENT '识别截图',
   `result_type` VARCHAR(100) DEFAULT NULL COMMENT '识别结果类型',
@@ -478,11 +478,19 @@ CREATE TABLE `ai_recognition_result` (
   `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0待确认 1已确认 2已推送事件 3误报',
   `confirm_user_id` BIGINT DEFAULT NULL COMMENT '确认人',
   `confirm_time` DATETIME DEFAULT NULL COMMENT '确认时间',
+  `source_type` TINYINT NOT NULL DEFAULT 1 COMMENT '1飞行识别 2人工上传',
+  `provider` VARCHAR(50) DEFAULT NULL COMMENT '识别提供方',
+  `model_name` VARCHAR(100) DEFAULT NULL COMMENT '模型名称',
+  `bbox` JSON DEFAULT NULL COMMENT '目标框[x1,y1,x2,y2]',
+  `raw_response` JSON DEFAULT NULL COMMENT 'AI原始返回',
+  `error_message` VARCHAR(500) DEFAULT NULL COMMENT '识别说明或失败原因',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '识别时间',
   PRIMARY KEY (`id`),
   KEY `idx_flight_record` (`flight_record_id`),
   KEY `idx_algo_id` (`algo_id`),
   KEY `idx_status` (`status`),
+  KEY `idx_source_type` (`source_type`),
+  KEY `idx_provider` (`provider`),
   CONSTRAINT `fk_recog_flight` FOREIGN KEY (`flight_record_id`) REFERENCES `flight_record` (`id`),
   CONSTRAINT `fk_recog_algo` FOREIGN KEY (`algo_id`) REFERENCES `ai_algorithm` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='AI识别结果表';
