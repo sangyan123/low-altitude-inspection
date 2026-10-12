@@ -11,6 +11,7 @@
         background-color="#1a2a4a"
         text-color="#a0b4d0"
         active-text-color="#409eff"
+        unique-opened
         class="sidebar-menu"
       >
         <el-menu-item index="/dashboard">
@@ -153,10 +154,13 @@ function logout() {
   height: 100vh;
 }
 .sidebar {
+  display: flex;
+  flex-direction: column;
   background-color: #1a2a4a;
-  overflow-y: auto;
+  overflow: hidden;
 }
 .logo {
+  flex: 0 0 60px;
   height: 60px;
   display: flex;
   align-items: center;
@@ -168,7 +172,29 @@ function logout() {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .sidebar-menu {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   border-right: none;
+  contain: layout paint style;
+  will-change: auto;
+}
+
+.sidebar-menu :deep(.el-sub-menu__title),
+.sidebar-menu :deep(.el-menu-item) {
+  transition: none !important;
+  animation: none !important;
+}
+
+.sidebar-menu :deep(.el-menu--inline) {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
+.sidebar-menu :deep(.el-menu-item .el-icon),
+.sidebar-menu :deep(.el-sub-menu__title .el-icon) {
+  flex-shrink: 0;
 }
 .header {
   height: 60px;
