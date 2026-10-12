@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.drone.platform.common.BusinessException;
 import com.drone.platform.module.task.entity.FlightPlan;
+import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.task.mapper.FlightPlanMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -15,6 +16,14 @@ import java.util.Random;
 
 @Service
 public class FlightPlanService extends ServiceImpl<FlightPlanMapper, FlightPlan> {
+    private final NotificationService notificationService;
+    private final FlightPlanMapper flightPlanMapper;
+
+    public FlightPlanService(FlightPlanMapper flightPlanMapper, NotificationService notificationService) {
+        this.flightPlanMapper = flightPlanMapper;
+        this.notificationService = notificationService;
+    }
+
 
     public Page<FlightPlan> page(int current, int size, Long deptId, Integer approvalStatus) {
         LambdaQueryWrapper<FlightPlan> wrapper = new LambdaQueryWrapper<>();

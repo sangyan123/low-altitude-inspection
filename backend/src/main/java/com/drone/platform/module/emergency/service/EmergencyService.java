@@ -11,6 +11,7 @@ import com.drone.platform.module.emergency.entity.RescueTarget;
 import com.drone.platform.module.emergency.mapper.EmergencyEventMapper;
 import com.drone.platform.module.emergency.mapper.RescueTargetMapper;
 import com.drone.platform.module.system.entity.SysUser;
+import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
 
     private final RescueTargetMapper targetMapper;
     private final SysUserMapper userMapper;
+    private final NotificationService notificationService;
     private final UavDeviceMapper deviceMapper;
 
     public Page<EmergencyEvent> page(int current, int size, Integer eventType, Integer level,

@@ -12,6 +12,7 @@ import com.drone.platform.module.event.entity.EventHandleLog;
 import com.drone.platform.module.event.entity.EventInfo;
 import com.drone.platform.module.event.mapper.EventHandleLogMapper;
 import com.drone.platform.module.event.mapper.EventInfoMapper;
+import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.system.entity.SysDept;
 import com.drone.platform.module.system.entity.SysUser;
 import com.drone.platform.module.system.mapper.SysDeptMapper;
@@ -38,6 +39,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
     private final AiAlgorithmMapper algorithmMapper;
     private final SysDeptMapper deptMapper;
     private final SysUserMapper userMapper;
+    private final NotificationService notificationService;
 
     public Page<EventInfo> page(int current, int size, String eventType, Integer eventSource,
                                 Long deptId, Integer status, String keyword,
@@ -139,6 +141,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
         recognition.setStatus(2);
         recognition.setConfirmTime(now);
         recognitionMapper.updateById(recognition);
+        notificationService.push(event.getSubmitUserId(), "AI识别已推送事件", description, 2, event.getId());
         return event.getId();
     }
 
@@ -158,6 +161,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
         event.setDispatchTime(LocalDateTime.now());
         updateById(event);
         insertLog(id, "派单", operatorId, remark);
+        notificationService.push(event.getSubmitUserId(), "事件已派单", event.getEventType() + "事件已派单处理", 1, event.getId());
     }
 
     @Transactional
@@ -175,6 +179,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
         event.setHandleUserId(operatorId);
         updateById(event);
         insertLog(id, "处置完成", operatorId, remark);
+        notificationService.push(event.getSubmitUserId(), "事件处置完成", event.getEventType() + "事件已处置完成", 2, event.getId());
     }
 
     @Transactional
@@ -196,10 +201,12 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
             event.setStatus(3);
             updateById(event);
             insertLog(id, "核验通过", operatorId, remark);
+            notificationService.push(event.getSubmitUserId(), "事件核验通过", event.getEventType() + "事件核验通过", 2, event.getId());
         } else {
             event.setStatus(1);
             updateById(event);
             insertLog(id, "核验不通过，退回派单", operatorId, remark);
+            notificationService.push(event.getSubmitUserId(), "事件核验不通过", event.getEventType() + "事件已退回派单", 2, event.getId());
         }
     }
 
@@ -215,6 +222,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
         event.setCloseTime(LocalDateTime.now());
         updateById(event);
         insertLog(id, "销号", operatorId, remark);
+        notificationService.push(event.getSubmitUserId(), "事件已销号", event.getEventType() + "事件已完成销号", 2, event.getId());
     }
 
     @Transactional

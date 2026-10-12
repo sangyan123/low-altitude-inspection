@@ -7,6 +7,7 @@ import com.drone.platform.common.BusinessException;
 import com.drone.platform.module.device.entity.UavDevice;
 import com.drone.platform.module.device.mapper.UavDeviceMapper;
 import com.drone.platform.module.task.entity.TransportTask;
+import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.task.mapper.TransportTaskMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -20,9 +21,11 @@ import java.util.Random;
 public class TransportTaskService extends ServiceImpl<TransportTaskMapper, TransportTask> {
 
     private final UavDeviceMapper deviceMapper;
+    private final NotificationService notificationService;
 
-    public TransportTaskService(UavDeviceMapper deviceMapper) {
+    public TransportTaskService(UavDeviceMapper deviceMapper, NotificationService notificationService) {
         this.deviceMapper = deviceMapper;
+        this.notificationService = notificationService;
     }
 
     public Page<TransportTask> page(int current, int size, Integer transportType,

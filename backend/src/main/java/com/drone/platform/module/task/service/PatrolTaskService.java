@@ -11,6 +11,7 @@ import com.drone.platform.module.system.mapper.SysUserMapper;
 import com.drone.platform.module.task.entity.PatrolTask;
 import com.drone.platform.module.task.entity.TaskDispatch;
 import com.drone.platform.module.task.mapper.PatrolTaskMapper;
+import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.task.mapper.TaskDispatchMapper;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -28,12 +29,15 @@ public class PatrolTaskService extends ServiceImpl<PatrolTaskMapper, PatrolTask>
     private final TaskDispatchMapper dispatchMapper;
     private final UavDeviceMapper deviceMapper;
     private final SysUserMapper userMapper;
+    private final NotificationService notificationService;
 
     public PatrolTaskService(TaskDispatchMapper dispatchMapper, UavDeviceMapper deviceMapper,
-                             @Lazy SysUserMapper userMapper) {
+                             @Lazy SysUserMapper userMapper,
+                             NotificationService notificationService) {
         this.dispatchMapper = dispatchMapper;
         this.deviceMapper = deviceMapper;
         this.userMapper = userMapper;
+        this.notificationService = notificationService;
     }
 
     public Page<PatrolTask> page(int current, int size, Integer taskType, String sceneType,
@@ -101,6 +105,7 @@ public class PatrolTaskService extends ServiceImpl<PatrolTaskMapper, PatrolTask>
 
         task.setStatus(1);
         updateById(task);
+        notificationService.push(task.getSubmitUserId(), "巡检任务已派单", task.getTaskName() + "已派单执行", 1, task.getId());
     }
 
     private String generateTaskNo(String prefix) {

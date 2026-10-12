@@ -23,7 +23,25 @@
         <el-sub-menu index="task">
           <template #title>
             <el-icon><Tickets /></el-icon><span>任务管理</span>
-          </template>
+              <el-drawer v-model="notificationVisible" title="消息通知" size="520px">
+      <div class="drawer-toolbar">
+        <span>未读消息：{{ unreadCount }}</span>
+        <el-button size="small" :disabled="unreadCount === 0" @click="handleMarkAllRead">全部已读</el-button>
+      </div>
+      <div
+        v-for="item in recentNotifications"
+        :key="item.id"
+        class="drawer-item"
+        :class="{ unread: item.isRead === 0 }"
+        @click="handleRead(item.id)"
+      >
+        <div class="drawer-title">{{ item.title }}</div>
+        <div class="drawer-content">{{ item.content || "-" }}</div>
+        <div class="drawer-time">{{ item.createTime }}</div>
+      </div>
+      <el-button style="width: 100%; margin-top: 16px" @click="router.push('/notifications')">进入消息中心</el-button>
+    </el-drawer>
+</template>
           <el-menu-item index="/task/patrol">
             <el-icon><Compass /></el-icon>巡检任务
           </el-menu-item>
@@ -91,17 +109,38 @@
       <el-header class="header">
         <div class="header-title">{{ route.meta.title }}</div>
         <div class="header-right">
-          <el-dropdown trigger="click">
+          <el-dropdown trigger="click" @visible-change="(isOpen: boolean) => isOpen && loadNotifications()">
             <span class="notify-info">
-              <el-badge :value="0" :hidden="true">
+              <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
                 <el-icon><Bell /></el-icon>
               </el-badge>
               消息通知
+              <el-icon><ArrowDown /></el-icon>
             </span>
             <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item disabled>暂无新消息</el-dropdown-item>
-              </el-dropdown-menu>
+              <div class="notification-dropdown">
+                <div class="dropdown-head">
+                  <span>消息通知</span>
+                  <el-button link type="primary" :disabled="unreadCount === 0" @click="handleMarkAllRead">全部已读</el-button>
+                </div>
+                <div v-if="recentNotifications.length === 0" class="dropdown-empty">暂无新消息</div>
+                <div
+                  v-for="item in recentNotifications"
+                  :key="item.id"
+                  class="dropdown-item"
+                  :class="{ unread: item.isRead === 0 }"
+                  @click="handleRead(item.id)"
+                >
+                  <div class="item-title">
+                    <span v-if="item.isRead === 0" class="dot"></span>
+                    {{ item.title }}
+                  </div>
+                  <div class="item-time">{{ item.createTime }}</div>
+                </div>
+                <div class="dropdown-footer">
+                  <el-button link type="primary" @click="router.push('/notifications')">查看全部</el-button>
+                </div>
+              </div>
             </template>
           </el-dropdown>
 
@@ -127,11 +166,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { storeToRefs } from "pinia";
 import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { connectNotificationSocket, disconnectNotificationSocket } from "../utils/websocket";
+import { getNotificationPage, getUnreadCount, markAllNotificationsRead, markNotificationRead } from "../api/notification";
+import { useNotificationStore } from "../stores/notification";
 
 const route = useRoute();
 const router = useRouter();
+const notificationStore = useNotificationStore();
+const { unreadCount } = storeToRefs(notificationStore);
+const recentNotifications = ref<any[]>([]);
+const notificationVisible = ref(false);
 
 const username = computed(() => {
   try {
@@ -140,6 +188,39 @@ const username = computed(() => {
   } catch {
     return "未知用户";
   }
+});
+
+async function loadNotifications() {
+  const res: any = await getNotificationPage({ current: 1, size: 8, isRead: null });
+  recentNotifications.value = res.data.records || [];
+  const countRes: any = await getUnreadCount();
+  notificationStore.setUnreadCount(countRes.data);
+}
+
+async function handleRead(id: number) {
+  const item = recentNotifications.value.find((item: any) => item.id === id);
+  if (!item || item.isRead === 1) return;
+  await markNotificationRead(id);
+  item.isRead = 1;
+  notificationStore.markRead(id);
+  const res: any = await getUnreadCount();
+  notificationStore.setUnreadCount(res.data);
+}
+
+async function handleMarkAllRead() {
+  await markAllNotificationsRead();
+  recentNotifications.value.forEach((item: any) => { item.isRead = 1; });
+  notificationStore.markAllRead();
+  ElMessage.success("已全部标记为已读");
+}
+
+onMounted(() => {
+  connectNotificationSocket();
+  loadNotifications();
+});
+
+onBeforeUnmount(() => {
+  disconnectNotificationSocket();
 });
 
 function logout() {
@@ -223,6 +304,110 @@ function logout() {
   cursor: pointer;
   color: #606266;
   font-size: 14px;
+}
+
+.notification-dropdown {
+  width: 320px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.dropdown-head,
+.dropdown-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+}
+
+.dropdown-head {
+  border-bottom: 1px solid #f0f0f0;
+  font-weight: 600;
+  color: #303133;
+}
+
+.dropdown-footer {
+  border-top: 1px solid #f0f0f0;
+  justify-content: center;
+}
+
+.dropdown-empty {
+  padding: 28px 0;
+  text-align: center;
+  color: #909399;
+  font-size: 13px;
+}
+
+.dropdown-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f5f7fa;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f7f9fc;
+}
+
+.dropdown-item.unread {
+  background: #f8fbff;
+}
+
+.item-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #303133;
+  font-size: 13px;
+}
+
+.item-title .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f56c6c;
+}
+
+.item-time {
+  margin-top: 4px;
+  color: #909399;
+  font-size: 12px;
+}
+
+.drawer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: #606266;
+}
+
+.drawer-item {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+}
+
+.drawer-item:hover,
+.drawer-item.unread {
+  background: #f8fbff;
+}
+
+.drawer-title {
+  font-weight: 600;
+  color: #303133;
+}
+
+.drawer-content {
+  margin-top: 4px;
+  color: #606266;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.drawer-time {
+  margin-top: 4px;
+  color: #909399;
+  font-size: 12px;
 }
 
 .user-info {

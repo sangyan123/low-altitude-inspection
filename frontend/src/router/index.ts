@@ -27,6 +27,7 @@ const router = createRouter({
         { path: "data/model", name: "ModelResult", component: () => import("../views/data/ModelResult.vue"), meta: { title: "三维模型" } },
         { path: "emergency", name: "EmergencyDispatch", component: () => import("../views/emergency/EmergencyDispatch.vue"), meta: { title: "应急调度" } },
         { path: "report", name: "StatisticsReport", component: () => import("../views/report/StatisticsReport.vue"), meta: { title: "统计报表" } },
+        { path: "notifications", name: "NotificationCenter", component: () => import("../views/notification/NotificationCenter.vue"), meta: { title: "消息通知" } },
         { path: "system/user", name: "UserManage", component: () => import("../views/system/UserManage.vue"), meta: { title: "账户管理" } },
         { path: "system/role", name: "RoleManage", component: () => import("../views/system/RoleManage.vue"), meta: { title: "角色管理" } },
         { path: "system/device", name: "DeviceManage", component: () => import("../views/device/DeviceManage.vue"), meta: { title: "无人机管理" } },
