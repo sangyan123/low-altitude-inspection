@@ -83,3 +83,6 @@ export function falseReportRecognition(id: number) {
 export function deleteRecognition(id: number) {
   return request.delete(`/ai/recognition/${id}`);
 }
+export function pushRecognitionEvent(id: number, data?: { deptId?: number; remark?: string }) {
+  return request.post(`/ai/recognition/${id}/push-event`, data || {});
+}

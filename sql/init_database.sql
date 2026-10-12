@@ -59,6 +59,8 @@ CREATE TABLE `sys_user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_username` (`username`),
   KEY `idx_dept_id` (`dept_id`),
+  KEY `idx_event_source` (`event_source`),
+  KEY `idx_recognition_id` (`recognition_id`),
   CONSTRAINT `fk_user_dept` FOREIGN KEY (`dept_id`) REFERENCES `sys_dept` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
 -- 初始管理员账号（用户名: admin 密码: admin123，角色: 超级管理员）
@@ -572,8 +574,13 @@ CREATE TABLE `event_info` (
   `verify_user_id` BIGINT DEFAULT NULL COMMENT '核验人',
   `verify_time` DATETIME DEFAULT NULL COMMENT '核验时间',
   `verify_result` TINYINT DEFAULT NULL COMMENT '1通过 2不通过',
+  `verify_remark` VARCHAR(500) DEFAULT NULL COMMENT '核验说明',
+  `close_time` DATETIME DEFAULT NULL COMMENT '销号时间',
   `lng` DECIMAL(10,6) DEFAULT NULL COMMENT '经度(GCJ-02)',
   `lat` DECIMAL(10,6) DEFAULT NULL COMMENT '纬度(GCJ-02)',
+  `description` VARCHAR(500) DEFAULT NULL COMMENT '事件描述',
+  `submit_user_id` BIGINT DEFAULT NULL COMMENT '上报人',
+  `handle_user_id` BIGINT DEFAULT NULL COMMENT '处置人',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

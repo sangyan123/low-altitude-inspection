@@ -5,6 +5,7 @@ import com.drone.platform.common.PageResult;
 import com.drone.platform.common.Result;
 import com.drone.platform.module.ai.entity.AiRecognitionResult;
 import com.drone.platform.module.ai.service.AiRecognitionService;
+import com.drone.platform.module.event.service.EventService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,6 +24,7 @@ import java.util.List;
 public class AiRecognitionController {
 
     private final AiRecognitionService recognitionService;
+    private final EventService eventService;
 
     @GetMapping("/page")
     public Result<PageResult<AiRecognitionResult>> page(
@@ -63,10 +65,30 @@ public class AiRecognitionController {
         return Result.ok();
     }
 
+    @PostMapping("/{id}/push-event")
+    public Result<Long> pushEvent(@PathVariable Long id,
+                                  @RequestBody(required = false) PushEventRequest request,
+                                  Authentication authentication) {
+        Long operatorId = (Long) authentication.getPrincipal();
+        Long eventId = eventService.pushRecognitionEvent(
+                id,
+                operatorId,
+                request == null ? null : request.getDeptId(),
+                request == null ? null : request.getRemark()
+        );
+        return Result.ok(eventId);
+    }
+
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         recognitionService.deleteResult(id);
         return Result.ok();
+    }
+
+    @Data
+    public static class PushEventRequest {
+        private Long deptId;
+        private String remark;
     }
 
     @Data

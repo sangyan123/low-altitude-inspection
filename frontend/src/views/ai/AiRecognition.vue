@@ -146,7 +146,7 @@
           <template #default="{ row }">{{ row.sourceType === 1 ? "飞行识别" : "人工上传" }}</template>
         </el-table-column>
         <el-table-column prop="createTime" label="识别时间" width="170" />
-        <el-table-column label="操作" width="270" fixed="right">
+        <el-table-column label="操作" width="330" fixed="right">
           <template #default="{ row }">
             <div class="row-actions">
               <el-button size="small" @click="openDetail(row)">详情</el-button>
@@ -157,6 +157,14 @@
               @click="handleConfirm(row.id)"
             >
               确认
+            </el-button>
+            <el-button
+              v-if="row.status === 1"
+              size="small"
+              type="success"
+              @click="handlePushEvent(row.id)"
+            >
+              推送事件
             </el-button>
             <el-button
               v-if="row.status !== 3 && row.status !== 2"
@@ -227,6 +235,7 @@ import {
   confirmRecognition,
   falseReportRecognition,
   deleteRecognition,
+  pushRecognitionEvent,
   type AiAlgorithm,
   type AiRecognitionResult,
 } from "../../api/ai";
@@ -350,6 +359,12 @@ async function handleConfirm(id: number) {
 async function handleFalseReport(id: number) {
   await falseReportRecognition(id);
   ElMessage.success("已标记误报");
+  loadData();
+}
+
+async function handlePushEvent(id: number) {
+  await pushRecognitionEvent(id);
+  ElMessage.success("已推送事件");
   loadData();
 }
 
