@@ -40,13 +40,33 @@
           <template #title>
             <el-icon><MagicStick /></el-icon><span>AI识别中心</span>
           </template>
+          <el-menu-item index="/ai/result">
+            <el-icon><Picture /></el-icon>识别结果
+          </el-menu-item>
           <el-menu-item index="/ai/algorithm">
             <el-icon><Operation /></el-icon>算法管理
           </el-menu-item>
-          <el-menu-item index="/ai/result">
-            <el-icon><Picture /></el-icon>AI识别结果
+        </el-sub-menu>
+        <el-menu-item index="/event">
+          <el-icon><Warning /></el-icon><span>事件管理</span>
+        </el-menu-item>
+        <el-sub-menu index="data">
+          <template #title>
+            <el-icon><FolderOpened /></el-icon><span>成果中心</span>
+          </template>
+          <el-menu-item index="/data/media">
+            <el-icon><VideoCamera /></el-icon>影像/视频成果
+          </el-menu-item>
+          <el-menu-item index="/data/model">
+            <el-icon><Grid /></el-icon>三维模型
           </el-menu-item>
         </el-sub-menu>
+        <el-menu-item index="/emergency">
+          <el-icon><WarningFilled /></el-icon><span>应急调度</span>
+        </el-menu-item>
+        <el-menu-item index="/report">
+          <el-icon><TrendCharts /></el-icon><span>统计报表</span>
+        </el-menu-item>
         <el-sub-menu index="system">
           <template #title>
             <el-icon><Setting /></el-icon><span>系统管理</span>
@@ -70,6 +90,20 @@
       <el-header class="header">
         <div class="header-title">{{ route.meta.title }}</div>
         <div class="header-right">
+          <el-dropdown trigger="click">
+            <span class="notify-info">
+              <el-badge :value="0" :hidden="true">
+                <el-icon><Bell /></el-icon>
+              </el-badge>
+              消息通知
+            </span>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item disabled>暂无新消息</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+
           <el-dropdown>
             <span class="user-info">
               <el-icon><UserFilled /></el-icon>
@@ -150,6 +184,21 @@ function logout() {
   font-weight: bold;
   color: #303133;
 }
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notify-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #606266;
+  font-size: 14px;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -163,5 +212,3 @@ function logout() {
   overflow-y: auto;
 }
 </style>
-
-

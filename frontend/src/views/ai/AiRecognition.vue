@@ -146,9 +146,10 @@
           <template #default="{ row }">{{ row.sourceType === 1 ? "飞行识别" : "人工上传" }}</template>
         </el-table-column>
         <el-table-column prop="createTime" label="识别时间" width="170" />
-        <el-table-column label="操作" width="230" fixed="right">
+        <el-table-column label="操作" width="270" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openDetail(row)">详情</el-button>
+            <div class="row-actions">
+              <el-button size="small" @click="openDetail(row)">详情</el-button>
             <el-button
               v-if="row.status !== 1 && row.status !== 2"
               size="small"
@@ -173,7 +174,8 @@
               <template #reference>
                 <el-button size="small" type="danger">删除</el-button>
               </template>
-            </el-popconfirm>
+              </el-popconfirm>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -422,6 +424,22 @@ onMounted(() => {
   width: 64px;
   height: 42px;
   border-radius: 4px;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.row-actions :deep(.el-button + .el-button) {
+  margin-left: 0;
+}
+
+.row-actions :deep(.el-button) {
+  flex: 0 0 auto;
+  padding: 5px 8px;
 }
 
 .detail-layout {
