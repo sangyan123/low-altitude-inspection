@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard" v-loading="loading">
     <el-row :gutter="12" class="stat-row">
-      <el-col :xs="12" :sm="8" :md="4" v-for="card in statCards" :key="card.label">
+      <el-col :xs="12" :sm="8" :md="6" v-for="card in statCards" :key="card.label">
         <el-card shadow="hover" class="stat-card-box">
           <div class="stat-card">
             <div class="stat-icon" :style="{ background: card.color }">
@@ -629,6 +629,7 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 </style>
+
 
 
 

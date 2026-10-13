@@ -30,7 +30,7 @@
     </el-card>
 
     <el-row :gutter="12" class="metric-row">
-      <el-col :xs="12" :sm="8" :md="4" v-for="card in metricCards" :key="card.label">
+      <el-col :xs="12" :sm="8" :md="6" v-for="card in metricCards" :key="card.label">
         <el-card shadow="hover" class="metric-card">
           <div class="metric-value">{{ card.value }}</div>
           <div class="metric-label">{{ card.label }}</div>
