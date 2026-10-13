@@ -10,7 +10,10 @@
             <div class="stat-meta">
               <div class="stat-value">{{ card.value }}</div>
               <div class="stat-label">{{ card.label }}</div>
-              <div class="stat-note">{{ card.note }}</div>
+            <div class="stat-note">
+              <span v-if="card.changeText" class="change-badge" :class="card.changeType">{{ card.changeText }}</span>
+              <span>{{ card.note }}</span>
+            </div>
             </div>
           </div>
         </el-card>
@@ -146,6 +149,24 @@
       </el-col>
     </el-row>
 
+    <el-row :gutter="12" class="trend-row">
+      <el-col :span="24">
+        <el-card shadow="never">
+          <template #header>
+            <div class="card-header">
+              <span>近30天业务趋势</span>
+              <span class="trend-legend">
+                <span class="trend-dot" style="background: #409eff"></span>巡检
+                <span class="trend-dot" style="background: #67c23a; margin-left: 12px"></span>运输
+                <span class="trend-dot" style="background: #e6a23c; margin-left: 12px"></span>事件
+              </span>
+            </div>
+          </template>
+          <div ref="trendChartRef" class="trend-chart"></div>
+        </el-card>
+      </el-col>
+    </el-row>
+
     <el-row :gutter="12" class="bottom-row">
       <el-col :span="24">
         <el-card shadow="never">
@@ -171,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import * as echarts from "echarts";
 import L from "leaflet";
 import GisMap from "../../components/GisMap.vue";
@@ -186,10 +207,12 @@ const stats = ref<DashboardStats | null>(null);
 const deptList = ref<any[]>([]);
 const selectedDevice = ref<DashboardDevice | null>(null);
 const statusChartRef = ref<HTMLElement>();
+const trendChartRef = ref<HTMLElement>();
 
 let map: L.Map | null = null;
 let unsubscribers: (() => void)[] = [];
 let statusChart: echarts.ECharts | null = null;
+let trendChart: echarts.ECharts | null = null;
 let hasFitBounds = false;
 
 const markers = new Map<number, L.Marker>();
@@ -228,15 +251,50 @@ const avgBatteryText = computed(() => {
   return `${value}%`;
 });
 
+const animated = ref<Record<string, number>>({});
+let animFrame = 0;
+
+function animateCounters(target: Record<string, number>) {
+  cancelAnimationFrame(animFrame);
+  const from: Record<string, number> = {};
+  for (const key of Object.keys(target)) from[key] = Number(animated.value[key] ?? 0);
+  const startTime = performance.now();
+  const duration = 700;
+  const step = (now: number) => {
+    const p = Math.min(1, (now - startTime) / duration);
+    const ease = 1 - Math.pow(1 - p, 3);
+    const next: Record<string, number> = {};
+      for (const key of Object.keys(target)) {
+        const value = Math.round((from[key] ?? 0) + (target[key] - (from[key] ?? 0)) * ease);
+        next[key] = Math.max(0, value);
+      }
+    animated.value = next;
+    if (p < 1) animFrame = requestAnimationFrame(step);
+  };
+  animFrame = requestAnimationFrame(step);
+}
+
+function changeBadge(pct: number | undefined, goodWhenUp: boolean) {
+  if (pct == null) return {};
+  const rounded = Number(pct);
+  if (rounded === 0) return { changeText: "— 持平", changeType: "flat" };
+  const up = rounded > 0;
+  const good = up === goodWhenUp;
+  return {
+    changeText: (up ? "▲ +" : "▼ ") + Math.abs(rounded) + "%",
+    changeType: good ? "up-good" : "up-bad",
+  };
+}
+
 const statCards = computed(() => [
-  { label: "设备总数", value: stats.value?.deviceTotal ?? 0, note: `已定位 ${stats.value?.locatedCount ?? 0} 台`, icon: "Monitor", color: "#409eff" },
-  { label: "在线设备", value: onlineDeviceCount.value, note: `含飞行中 ${stats.value?.flyingCount ?? 0} 台`, icon: "Connection", color: "#67c23a" },
-  { label: "飞行中", value: stats.value?.flyingCount ?? 0, note: `充电中 ${stats.value?.chargingCount ?? 0} 台`, icon: "Position", color: "#e6a23c" },
-  { label: "今日任务", value: stats.value?.todayTaskCount ?? 0, note: "巡检 + 运输", icon: "Calendar", color: "#7367f0" },
-  { label: "执行中任务", value: stats.value?.activeTaskCount ?? 0, note: `运输中 ${stats.value?.transportActive ?? 0} 单`, icon: "Tickets", color: "#ff9f43" },
-  { label: "待审计划", value: stats.value?.planPending ?? 0, note: `计划总数 ${stats.value?.planTotal ?? 0}`, icon: "DocumentChecked", color: "#f56c6c" },
-  { label: "事件总数", value: stats.value?.eventTotal ?? 0, note: `待处置 ${stats.value?.eventPending ?? 0} 起`, icon: "Warning", color: "#f56c6c" },
-  { label: "已销号事件", value: stats.value?.eventClosed ?? 0, note: `今日新增 ${stats.value?.todayEventCount ?? 0} 起`, icon: "CircleCheck", color: "#67c23a" },
+  { label: "设备总数", value: animated.value.deviceTotal ?? 0, note: `已定位 ${stats.value?.locatedCount ?? 0} 台`, icon: "Monitor", color: "#409eff" },
+  { label: "在线设备", value: animated.value.onlineCount ?? 0, note: `含飞行中 ${stats.value?.flyingCount ?? 0} 台`, icon: "Connection", color: "#67c23a" },
+  { label: "飞行中", value: animated.value.flyingCount ?? 0, note: `充电中 ${stats.value?.chargingCount ?? 0} 台`, icon: "Position", color: "#e6a23c" },
+  { label: "今日任务", value: animated.value.todayTaskCount ?? 0, note: "巡检 + 运输", ...changeBadge(stats.value?.compare?.taskChangePct, true), icon: "Calendar", color: "#7367f0" },
+  { label: "执行中任务", value: animated.value.activeTaskCount ?? 0, note: `运输中 ${stats.value?.transportActive ?? 0} 单`, icon: "Tickets", color: "#ff9f43" },
+  { label: "待审计划", value: animated.value.planPending ?? 0, note: `计划总数 ${stats.value?.planTotal ?? 0}`, icon: "DocumentChecked", color: "#f56c6c" },
+  { label: "事件总数", value: animated.value.eventTotal ?? 0, note: `待处置 ${stats.value?.eventPending ?? 0} 起`, icon: "Warning", color: "#f56c6c" },
+  { label: "已销号事件", value: animated.value.eventClosed ?? 0, note: `今日新增 ${stats.value?.todayEventCount ?? 0} 起`, icon: "CircleCheck", color: "#67c23a" },
 ]);
 
 const patrolRate = computed(() => {
@@ -259,9 +317,24 @@ const planRate = computed(() => {
   return total ? Math.round(((stats.value?.planApproved ?? 0) / total) * 100) : 0;
 });
 
+watch(() => stats.value, (s) => {
+  if (!s) return;
+  animateCounters({
+    deviceTotal: s.deviceTotal,
+    onlineCount: (s.onlineCount ?? 0) + (s.flyingCount ?? 0),
+    flyingCount: s.flyingCount ?? 0,
+    todayTaskCount: s.todayTaskCount ?? 0,
+    activeTaskCount: s.activeTaskCount ?? 0,
+    planPending: s.planPending ?? 0,
+    eventTotal: s.eventTotal ?? 0,
+    eventClosed: s.eventClosed ?? 0,
+  });
+}, { immediate: true });
+
 function onMapReady(mapInstance: L.Map) {
   map = mapInstance;
   renderMarkers();
+  updateTrendChart();
 }
 
 function clearMarkers() {
@@ -301,6 +374,14 @@ function updateChart() {
   }
 
   statusChart.setOption({
+    title: {
+      text: String(deviceTotalForPie()),
+      subtext: "设备总数",
+      left: "center",
+      top: "34%",
+      textStyle: { fontSize: 22, fontWeight: 700, color: "#303133" },
+      subtextStyle: { fontSize: 12, color: "#909399" },
+    },
     tooltip: { trigger: "item" },
     legend: { bottom: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 12 } },
     series: [{
@@ -311,7 +392,7 @@ function updateChart() {
       label: { show: false },
       data: [
         { value: stats.value?.onlineCount ?? 0, name: "在线", itemStyle: { color: "#67c23a" } },
-        { value: stats.value?.flyingCount ?? 0, name: "飞行中", itemStyle: { color: "#409eff" } },
+        { value: animated.value.flyingCount ?? 0, name: "飞行中", itemStyle: { color: "#409eff" } },
         { value: stats.value?.chargingCount ?? 0, name: "充电中", itemStyle: { color: "#e6a23c" } },
         { value: stats.value?.offlineCount ?? 0, name: "离线", itemStyle: { color: "#909399" } },
         { value: stats.value?.maintainCount ?? 0, name: "维护中", itemStyle: { color: "#f56c6c" } },
@@ -320,8 +401,43 @@ function updateChart() {
   });
 }
 
+function deviceTotalForPie() {
+  const s = stats.value;
+  return (s?.onlineCount ?? 0) + (s?.flyingCount ?? 0) + (s?.chargingCount ?? 0) + (s?.offlineCount ?? 0) + (s?.maintainCount ?? 0);
+}
+
+function updateTrendChart() {
+  if (!trendChartRef.value) return;
+  if (!trendChart) trendChart = echarts.init(trendChartRef.value);
+  const trends = stats.value?.trends ?? [];
+  const makeLine = (name: string, color: string, data: number[]) => ({
+    name,
+    type: "line" as const,
+    smooth: true,
+    symbol: "circle",
+    symbolSize: 5,
+    data,
+    itemStyle: { color },
+    lineStyle: { width: 2 },
+    areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: color + "55" }, { offset: 1, color: color + "05" }]) },
+  });
+  trendChart.setOption({
+    tooltip: { trigger: "axis" },
+    grid: { left: 36, right: 16, top: 16, bottom: 24 },
+    xAxis: { type: "category", boundaryGap: false, data: trends.map((t) => t.date) },
+    yAxis: { type: "value", minInterval: 1 },
+    animationDuration: 800,
+    series: [
+      makeLine("巡检", "#409eff", trends.map((t) => t.patrolCount)),
+      makeLine("运输", "#67c23a", trends.map((t) => t.transportCount)),
+      makeLine("事件", "#e6a23c", trends.map((t) => t.eventCount)),
+    ],
+  });
+}
+
 function handleResize() {
   statusChart?.resize();
+  trendChart?.resize();
 }
 
 async function loadStats() {
@@ -329,6 +445,7 @@ async function loadStats() {
   stats.value = res.data;
   selectedDevice.value = stats.value?.devices?.find((item) => item.id === selectedDevice.value?.id) || null;
   renderMarkers();
+  updateTrendChart();
   updateChart();
 }
 
@@ -342,6 +459,7 @@ function handleDashboardUpdate(data: any) {
   stats.value = data;
   selectedDevice.value = stats.value?.devices?.find((item: any) => item.id === selectedDevice.value?.id) || null;
   renderMarkers();
+  updateTrendChart();
   updateChart();
 }
 
@@ -362,6 +480,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   unsubscribers.forEach((fn) => fn());
   window.removeEventListener("resize", handleResize);
+  trendChart?.dispose();
+  trendChart = null;
   statusChart?.dispose();
   statusChart = null;
   clearMarkers();
@@ -372,6 +492,19 @@ onBeforeUnmount(() => {
 .dashboard {
   min-height: 100%;
 }
+
+.change-badge {
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.change-badge.up-good { color: #67c23a; }
+.change-badge.up-bad { color: #e6a23c; }
+.change-badge.flat { color: #909399; }
+.trend-row { margin-top: 12px; }
+.trend-chart { height: 260px; width: 100%; }
+.trend-legend { font-size: 12px; color: #606266; display: inline-flex; align-items: center; }
+.trend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
 
 .stat-row {
   margin-bottom: 12px;

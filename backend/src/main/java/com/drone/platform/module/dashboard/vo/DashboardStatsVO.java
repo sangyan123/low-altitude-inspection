@@ -53,9 +53,14 @@ public class DashboardStatsVO {
     /** 当前执行中的巡检 + 运输任务 */
     private long activeTaskCount;
 
+    /** 近30天业务趋势（按日） */
+    private List<TrendPoint> trends;
+
+    /** 环比对比（今日 vs 昨日） */
+    private CompareBlock compare;
+
     /** 大屏地图设备分布 */
     private List<DeviceMarker> devices;
-
     @Data
     public static class DeviceMarker {
         private Long id;
@@ -70,4 +75,27 @@ public class DashboardStatsVO {
         private Long deptId;
         private Integer totalFlightCount;
     }
+
+    @Data
+    public static class TrendPoint {
+        /** MM-dd */
+        private String date;
+        private long patrolCount;
+        private long transportCount;
+        private long eventCount;
+    }
+
+    @Data
+    public static class CompareBlock {
+        private long yesterdayTaskCount;
+        private double taskChangePct;
+        private long yesterdayEventCount;
+        private double eventChangePct;
+        private long todayAiCount;
+        private long yesterdayAiCount;
+        private double aiChangePct;
+    }
+
 }
+
+

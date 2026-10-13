@@ -52,7 +52,30 @@ export interface DashboardStats {
   activeEventCount: number;
   todayTaskCount: number;
   activeTaskCount: number;
+  /** 近30天业务趋势（按日） */
+  trends?: DashboardTrendPoint[];
+
+  /** 环比对比（今日 vs 昨日） */
+  compare?: DashboardCompare;
+
   devices: DashboardDevice[];
+}
+
+export interface DashboardTrendPoint {
+  date: string;
+  patrolCount: number;
+  transportCount: number;
+  eventCount: number;
+}
+
+export interface DashboardCompare {
+  yesterdayTaskCount: number;
+  taskChangePct: number;
+  yesterdayEventCount: number;
+  eventChangePct: number;
+  todayAiCount: number;
+  yesterdayAiCount: number;
+  aiChangePct: number;
 }
 
 export function getDashboardStats() {

@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.drone.platform.module.dashboard.vo.DashboardStatsVO;
 import com.drone.platform.module.event.entity.EventInfo;
 import com.drone.platform.module.event.mapper.EventInfoMapper;
+import com.drone.platform.module.ai.entity.AiRecognitionResult;
+import com.drone.platform.module.ai.mapper.AiRecognitionResultMapper;
 import com.drone.platform.module.device.entity.UavDevice;
 import com.drone.platform.module.device.mapper.UavDeviceMapper;
 import com.drone.platform.module.task.entity.FlightPlan;
@@ -21,6 +23,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.List;
 
 @Service
@@ -34,6 +40,7 @@ public class DashboardService {
     private final TransportTaskMapper transportTaskMapper;
     private final FlightPlanMapper flightPlanMapper;
     private final EventInfoMapper eventInfoMapper;
+    private final AiRecognitionResultMapper aiRecognitionResultMapper;
     private final WebSocketPushService webSocketPushService;
 
     public DashboardStatsVO getStats() {
@@ -44,6 +51,7 @@ public class DashboardService {
         fillPlanStats(stats);
         fillEventStats(stats);
         fillTodayStats(stats);
+        fillTrendsAndCompare(stats);
         return stats;
     }
 
@@ -52,6 +60,93 @@ public class DashboardService {
     public void pushDashboardUpdate() {
         if (!webSocketPushService.hasConnectedSessions()) return;
         webSocketPushService.broadcastToAll(java.util.Map.of("type", "DASHBOARD_UPDATE", "data", getStats()));
+    }
+
+    /** 近30天趋势 + 今日/昨日环比 */
+    private void fillTrendsAndCompare(DashboardStatsVO stats) {
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(29);
+        LocalDateTime startTime = start.atStartOfDay();
+
+        Map<LocalDate, Long> patrolByDay = countByDay(patrolTaskMapper.selectList(
+                new LambdaQueryWrapper<PatrolTask>()
+                        .select(PatrolTask::getCreateTime)
+                        .ge(PatrolTask::getCreateTime, startTime)), PatrolTask::getCreateTime);
+        Map<LocalDate, Long> transportByDay = countByDay(transportTaskMapper.selectList(
+                new LambdaQueryWrapper<TransportTask>()
+                        .select(TransportTask::getCreateTime)
+                        .ge(TransportTask::getCreateTime, startTime)), TransportTask::getCreateTime);
+        Map<LocalDate, Long> eventByDay = countByDay(eventInfoMapper.selectList(
+                new LambdaQueryWrapper<EventInfo>()
+                        .select(EventInfo::getCreateTime)
+                        .ge(EventInfo::getCreateTime, startTime)), EventInfo::getCreateTime);
+
+        List<DashboardStatsVO.TrendPoint> trends = new ArrayList<>(30);
+        for (LocalDate d = start; !d.isAfter(today); d = d.plusDays(1)) {
+            DashboardStatsVO.TrendPoint point = new DashboardStatsVO.TrendPoint();
+            point.setDate(d.format(java.time.format.DateTimeFormatter.ofPattern("MM-dd")));
+            point.setPatrolCount(patrolByDay.getOrDefault(d, 0L));
+            point.setTransportCount(transportByDay.getOrDefault(d, 0L));
+            point.setEventCount(eventByDay.getOrDefault(d, 0L));
+            trends.add(point);
+        }
+        stats.setTrends(trends);
+
+        // 环比：今日 vs 昨日
+        LocalDateTime todayStart = today.atStartOfDay();
+        LocalDateTime yesterdayStart = today.minusDays(1).atStartOfDay();
+
+        long todayPatrol = patrolByDay.getOrDefault(today, 0L);
+        long todayTransport = transportByDay.getOrDefault(today, 0L);
+        long todayTask = todayPatrol + todayTransport;
+        long yesterdayTask = patrolByDay.getOrDefault(today.minusDays(1), 0L)
+                + transportByDay.getOrDefault(today.minusDays(1), 0L);
+
+        long todayEvent = eventByDay.getOrDefault(today, 0L);
+        long yesterdayEvent = eventByDay.getOrDefault(today.minusDays(1), 0L);
+
+        long todayAi = countAi(todayStart, null);
+        long yesterdayAi = countAi(yesterdayStart, todayStart);
+
+        DashboardStatsVO.CompareBlock compare = new DashboardStatsVO.CompareBlock();
+        compare.setYesterdayTaskCount(yesterdayTask);
+        compare.setTaskChangePct(changePct(todayTask, yesterdayTask));
+        compare.setYesterdayEventCount(yesterdayEvent);
+        compare.setEventChangePct(changePct(todayEvent, yesterdayEvent));
+        compare.setTodayAiCount(todayAi);
+        compare.setYesterdayAiCount(yesterdayAi);
+        compare.setAiChangePct(changePct(todayAi, yesterdayAi));
+        stats.setCompare(compare);
+    }
+
+    /** 单表按日计数（只查 createTime 一列） */
+    private <T> Map<LocalDate, Long> countByDay(List<T> rows, com.baomidou.mybatisplus.core.toolkit.support.SFunction<T, LocalDateTime> timeGetter) {
+        Map<LocalDate, Long> result = new TreeMap<>();
+        for (T row : rows) {
+            LocalDateTime time = timeGetter.apply(row);
+            if (time != null) {
+                result.merge(time.toLocalDate(), 1L, Long::sum);
+            }
+        }
+        return result;
+    }
+
+    private long countAi(LocalDateTime since, LocalDateTime until) {
+        LambdaQueryWrapper<AiRecognitionResult> wrapper = new LambdaQueryWrapper<AiRecognitionResult>()
+                .ge(AiRecognitionResult::getCreateTime, since);
+        if (until != null) {
+            wrapper.lt(AiRecognitionResult::getCreateTime, until);
+        }
+        Long count = aiRecognitionResultMapper.selectCount(wrapper);
+        return count == null ? 0 : count;
+    }
+
+    private double changePct(long current, long previous) {
+        if (previous == 0) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+        return BigDecimal.valueOf((current - previous) * 100.0 / previous)
+                .setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 
     private void fillDeviceStats(DashboardStatsVO stats) {
@@ -183,4 +278,5 @@ public class DashboardService {
         return count(mapper, wrapper);
     }
 }
+
 
