@@ -58,3 +58,7 @@ ai:
     model: glm-4.6v-flash
     base-url: https://open.bigmodel.cn/api/paas/v4
     timeout-seconds: 60
+
+telemetry:
+  simulation:
+    enabled: true
