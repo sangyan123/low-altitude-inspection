@@ -2,7 +2,7 @@
   <el-container class="layout">
     <el-aside width="220px" class="sidebar">
       <div class="logo">
-        <el-icon size="24"><Position /></el-icon>
+      <LogoIcon />
         <span>一网统飞平台</span>
       </div>
       <el-menu
@@ -173,6 +173,7 @@ import { ElMessage } from "element-plus";
 import { connectNotificationSocket, disconnectNotificationSocket } from "../utils/websocket";
 import { getNotificationPage, getUnreadCount, markAllNotificationsRead, markNotificationRead } from "../api/notification";
 import { useNotificationStore } from "../stores/notification";
+import LogoIcon from "../components/LogoIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
