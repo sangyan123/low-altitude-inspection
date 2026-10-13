@@ -28,8 +28,8 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 jwt:
-  secret: DronePlatformSecretKey2026ForJwtTokenSigningAndVerification
-  expiration: 86400000  # 24h in ms
+  secret: ${JWT_SECRET:DronePlatformSecretKey2026ForJwtTokenSigningAndVerification}  # 生产环境必须通过环境变量注入随机密钥
+  expiration: ${JWT_EXPIRATION:86400000}
 springdoc:
   api-docs:
     path: /v3/api-docs

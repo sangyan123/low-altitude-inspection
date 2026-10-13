@@ -44,7 +44,7 @@ public class GlmVisionEngine implements AiRecognitionEngine {
      * 直接把智谱 API Key 填到这里。
      * 注意：不要把真实 Key 提交到 Git。
      */
-    private static final String GLM_API_KEY = "xxxxx";
+    private static final String GLM_API_KEY = "24b5ddb1367a4042bcc3439094f2d14c.kGnwJf8b3IOBGGsH";
 
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
