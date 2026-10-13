@@ -1,8 +1,8 @@
 <template>
   <div class="login-page">
     <div class="login-box">
-      <h2>市级一网统飞大平台</h2>
-      <p class="subtitle">政务低空无人机一体化平台</p>
+      <h2>低空无人机巡检平台</h2>
+      <p class="subtitle">低空无人机一体化平台</p>
       <el-form :model="form" @submit.prevent="handleLogin">
         <el-form-item>
           <el-input v-model="form.username" placeholder="用户名" size="large" prefix-icon="User" />
@@ -75,3 +75,5 @@ async function handleLogin() {
   font-size: 14px;
 }
 </style>
+
+

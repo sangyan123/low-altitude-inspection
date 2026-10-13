@@ -1,9 +1,9 @@
 <template>
   <el-container class="layout">
-    <el-aside width="220px" class="sidebar">
+    <el-aside :width="isCollapse ? '64px' : '220px'" class="sidebar">
       <div class="logo">
       <LogoIcon />
-        <span>一网统飞平台</span>
+        <span v-show="!isCollapse">低空无人机巡检平台</span>
       </div>
       <el-menu
         :default-active="route.path"
@@ -13,6 +13,8 @@
         active-text-color="#409eff"
         unique-opened
         class="sidebar-menu"
+        :collapse="isCollapse"
+        :collapse-transition="false"
       >
         <el-menu-item index="/dashboard">
           <el-icon><Odometer /></el-icon><span>首页大屏</span>
@@ -107,7 +109,13 @@
     </el-aside>
     <el-container>
       <el-header class="header">
-        <div class="header-title">{{ route.meta.title }}</div>
+        <div class="header-left">
+          <el-icon class="collapse-btn" :size="20" @click="isCollapse = !isCollapse">
+            <Fold v-if="!isCollapse" />
+            <Expand v-else />
+          </el-icon>
+          <span class="header-title">{{ route.meta.title }}</span>
+        </div>
         <div class="header-right">
           <el-dropdown trigger="click" @visible-change="(isOpen: boolean) => isOpen && loadNotifications()">
             <span class="notify-info">
@@ -176,6 +184,7 @@ import { useNotificationStore } from "../stores/notification";
 import LogoIcon from "../components/LogoIcon.vue";
 
 const route = useRoute();
+const isCollapse = ref(false);
 const router = useRouter();
 const notificationStore = useNotificationStore();
 const { unreadCount } = storeToRefs(notificationStore);
@@ -236,11 +245,24 @@ function logout() {
   height: 100vh;
 }
 .sidebar {
+  transition: width 0.25s ease;
   display: flex;
   flex-direction: column;
   background-color: #1a2a4a;
   overflow: hidden;
 }
+.collapse-btn {
+  margin-right: 14px;
+  cursor: pointer;
+  color: #303133;
+  transition: color 0.2s;
+}
+.collapse-btn:hover { color: #409eff; }
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
 .logo {
   flex: 0 0 60px;
   height: 60px;
@@ -414,3 +436,4 @@ function logout() {
   overflow-y: auto;
 }
 </style>
+
