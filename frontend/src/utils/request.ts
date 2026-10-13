@@ -17,6 +17,10 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => {
+    // 二进制流（文件下载）没有业务码字段，直接放行
+    if (response.config.responseType === "blob") {
+      return response;
+    }
     const res = response.data;
     if (res.code !== 200) {
       ElMessage.error(res.message || "请求失败");
@@ -35,3 +39,4 @@ request.interceptors.response.use(
 );
 
 export default request;
+

@@ -21,7 +21,16 @@
           <el-option v-for="item in depts" :key="item.id" :label="item.deptName" :value="item.id" />
         </el-select>
         <el-button type="primary" @click="loadReport">刷新报表</el-button>
-        <el-button @click="exportCsv">导出CSV</el-button>
+        <el-dropdown @command="handleExport" style="margin-left: 12px">
+          <el-button type="success">导出报表<el-icon style="margin-left: 4px"><ArrowDown /></el-icon></el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="excel">Excel (.xlsx)</el-dropdown-item>
+              <el-dropdown-item command="pdf">PDF 文档 (.pdf)</el-dropdown-item>
+              <el-dropdown-item command="csv" divided>CSV (兼容格式)</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <div class="toolbar-right">
           <el-tag effect="plain">{{ report?.startDate }} 至 {{ report?.endDate }}</el-tag>
           <el-tag effect="plain" type="success">{{ granularityName }}</el-tag>
@@ -88,7 +97,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import * as echarts from "echarts";
-import { getReport, type ReportData } from "../../api/report";
+import { ElMessage } from "element-plus";
+import { getReport, exportReportExcel, exportReportPdf, type ReportData } from "../../api/report";
 import { getDeptList } from "../../api/system";
 
 const loading = ref(false);
@@ -227,6 +237,34 @@ function csvCell(value: unknown) {
     : text;
 }
 
+async function handleExport(command: string) {
+  if (command === "csv") {
+    exportCsv();
+    return;
+  }
+  const params = {
+    startDate: dateRange.value?.[0],
+    endDate: dateRange.value?.[1],
+    granularity: granularity.value,
+    deptId: deptId.value || null,
+  };
+  try {
+    const res: any = command === "excel"
+      ? await exportReportExcel(params)
+      : await exportReportPdf(params);
+    const blob = res.data as Blob;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "统计报表_" + (params.startDate || "") + "_" + (params.endDate || "") + "." + command;
+    link.click();
+    URL.revokeObjectURL(url);
+    ElMessage.success("导出成功");
+  } catch {
+    ElMessage.error("导出失败，请稍后重试");
+  }
+}
+
 function exportCsv() {
   const rows: unknown[][] = [
     ["报表周期", report.value?.startDate, report.value?.endDate, report.value?.granularity],
@@ -344,3 +382,6 @@ onBeforeUnmount(() => {
   margin-top: 12px;
 }
 </style>
+
+
+

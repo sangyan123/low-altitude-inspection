@@ -75,3 +75,20 @@ export function getReport(params: {
 }) {
   return request.get("/report/overview", { params });
 }
+export function exportReportExcel(params: {
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+  deptId?: number | null;
+}) {
+  return request.get("/report/export/excel", { params, responseType: "blob" });
+}
+
+export function exportReportPdf(params: {
+  startDate?: string;
+  endDate?: string;
+  granularity?: string;
+  deptId?: number | null;
+}) {
+  return request.get("/report/export/pdf", { params, responseType: "blob" });
+}
