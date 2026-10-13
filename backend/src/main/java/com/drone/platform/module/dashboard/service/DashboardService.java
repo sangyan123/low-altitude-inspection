@@ -13,6 +13,8 @@ import com.drone.platform.module.task.mapper.FlightPlanMapper;
 import com.drone.platform.module.task.mapper.PatrolTaskMapper;
 import com.drone.platform.module.task.mapper.TransportTaskMapper;
 import lombok.RequiredArgsConstructor;
+import com.drone.platform.websocket.service.WebSocketPushService;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -32,6 +34,7 @@ public class DashboardService {
     private final TransportTaskMapper transportTaskMapper;
     private final FlightPlanMapper flightPlanMapper;
     private final EventInfoMapper eventInfoMapper;
+    private final WebSocketPushService webSocketPushService;
 
     public DashboardStatsVO getStats() {
         DashboardStatsVO stats = new DashboardStatsVO();
@@ -42,6 +45,13 @@ public class DashboardService {
         fillEventStats(stats);
         fillTodayStats(stats);
         return stats;
+    }
+
+
+    @Scheduled(fixedRate = 30000)
+    public void pushDashboardUpdate() {
+        if (!webSocketPushService.hasConnectedSessions()) return;
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "DASHBOARD_UPDATE", "data", getStats()));
     }
 
     private void fillDeviceStats(DashboardStatsVO stats) {
@@ -173,3 +183,4 @@ public class DashboardService {
         return count(mapper, wrapper);
     }
 }
+

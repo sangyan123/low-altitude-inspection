@@ -7,6 +7,17 @@ let reconnectTimer: number | undefined;
 let heartbeatTimer: number | undefined;
 let retryCount = 0;
 
+type MessageHandler = (data: any) => void;
+const messageHandlers = new Map<string, Set<MessageHandler>>();
+
+export function subscribeToMessageType(type: string, handler: MessageHandler): () => void {
+  if (!messageHandlers.has(type)) messageHandlers.set(type, new Set());
+  messageHandlers.get(type)!.add(handler);
+  return () => {
+    messageHandlers.get(type)?.delete(handler);
+  };
+}
+
 function buildSocketUrl() {
   const token = localStorage.getItem("token");
   if (!token) return "";
@@ -41,6 +52,19 @@ function handleMessage(event: MessageEvent) {
         message: notification.content || "您有一条新的实时通知",
         type: notification.notifyType === 6 ? "warning" : "info",
       });
+    }
+    // Dispatch custom message types to subscribers
+    if (data.type && data.type !== "NOTIFICATION") {
+      const typeHandlers = messageHandlers.get(data.type);
+      if (typeHandlers) {
+        for (const handler of typeHandlers) {
+          try {
+            handler(data.data ?? data);
+          } catch (e) {
+            console.warn("Message handler error for type=" + data.type, e);
+          }
+        }
+      }
     }
   } catch (error) {
     console.warn("Invalid websocket message", error);
@@ -109,3 +133,4 @@ export function disconnectNotificationSocket() {
   socket?.close();
   socket = null;
 }
+

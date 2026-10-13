@@ -393,6 +393,7 @@ import {
   type EmergencyEvent,
   type EmergencyTarget,
 } from "../../api/emergency";
+import { subscribeToMessageType } from "../../utils/websocket";
 
 const loading = ref(false);
 const list = ref<EmergencyEvent[]>([]);
@@ -414,7 +415,7 @@ const isTargetEdit = ref(false);
 const dateRange = ref<[string, string] | null>(null);
 let map: L.Map | null = null;
 let markers: L.Layer[] = [];
-let refreshTimer: number | undefined;
+let unsubscribers: (() => void)[] = [];
 
 const query = reactive({
   current: 1,
@@ -713,20 +714,23 @@ function handleResize() {
   map?.invalidateSize();
 }
 
+function handleEmergencyUpdate() {
+  if (showDevices.value && selectedEvent.value?.id) {
+    selectEvent(selectedEvent.value);
+  }
+}
+
 onMounted(async () => {
   window.addEventListener("resize", handleResize);
   const res: any = await getDevicePage({ current: 1, size: 500 });
   devices.value = res.data.records || [];
   await loadData();
-  refreshTimer = window.setInterval(() => {
-    if (showDevices.value && selectedEvent.value?.id) {
-      selectEvent(selectedEvent.value);
-    }
-  }, 30000);
+  // WebSocket real-time update replaces polling
+  unsubscribers.push(subscribeToMessageType("EMERGENCY_UPDATE", handleEmergencyUpdate));
 });
 
 onBeforeUnmount(() => {
-  if (refreshTimer) window.clearInterval(refreshTimer);
+  unsubscribers.forEach((fn) => fn());
   window.removeEventListener("resize", handleResize);
   clearMarkers();
 });

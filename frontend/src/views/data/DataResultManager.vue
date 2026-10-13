@@ -199,7 +199,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="previewVisible" :title="preview?.fileName || '成果预览'" width="880px">
+    <el-dialog v-model="previewVisible" :title="preview?.fileName || '成果预览'" :width="preview && is3dModel(preview) ? 1100 : 880" destroy-on-close>
       <div v-if="preview" class="preview-container">
         <video v-if="preview.dataType === 1" :src="preview.fileUrl" controls class="media-viewer" />
         <el-image
@@ -210,11 +210,16 @@
           fit="contain"
           class="media-viewer"
         />
+        <Model3DViewer
+          v-else-if="is3dModel(preview)"
+          :url="preview.fileUrl"
+          :format="preview.modelFormat"
+        />
         <div v-else class="model-placeholder">
           <el-icon size="46"><Box /></el-icon>
           <div class="model-title">{{ preview.fileName }}</div>
-          <div class="model-description">三维 / 点云在线预览后续接入 Cesium 或 Three.js，当前可先下载文件。</div>
-          <el-button type="primary" @click="openExternal(preview.fileUrl)">打开文件链接</el-button>
+          <div class="model-description">该格式暂不支持在线预览，可下载后查看。</div>
+          <el-button type="primary" @click="openExternal(preview.fileUrl)">下载文件</el-button>
         </div>
       </div>
     </el-dialog>
@@ -234,6 +239,7 @@ import {
   type DataResult,
 } from "../../api/data";
 import { getDeptList } from "../../api/system";
+import Model3DViewer from "../../components/Model3DViewer.vue";
 
 const props = defineProps<{
   category: "media" | "model";
@@ -292,6 +298,12 @@ const form = reactive({ ...emptyForm });
 const fileSizeText = (value: number | string | null | undefined) => {
   const num = Number(value ?? 0);
   return num ? `${num.toFixed(2)} MB` : "-";
+};
+
+const is3dModel = (item: DataResult) => {
+  if (!item?.fileUrl) return false;
+  const url = item.fileUrl.toLowerCase();
+  return url.endsWith(".glb") || url.endsWith(".gltf") || url.endsWith(".obj");
 };
 
 const openExternal = (url?: string) => {

@@ -13,6 +13,7 @@ import com.drone.platform.module.emergency.mapper.RescueTargetMapper;
 import com.drone.platform.module.system.entity.SysUser;
 import com.drone.platform.module.notification.service.NotificationService;
 import com.drone.platform.module.system.mapper.SysUserMapper;
+import com.drone.platform.websocket.service.WebSocketPushService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
     private final SysUserMapper userMapper;
     private final NotificationService notificationService;
     private final UavDeviceMapper deviceMapper;
+    private final WebSocketPushService webSocketPushService;
 
     public Page<EmergencyEvent> page(int current, int size, Integer eventType, Integer level,
                                      Integer status, String keyword, LocalDate startDate, LocalDate endDate) {
@@ -78,6 +80,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         event.setReportUserId(userId);
         event.setCreateTime(LocalDateTime.now());
         save(event);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE", "data", java.util.Map.of("eventId", event.getId(), "action", "created")));
         return event.getId();
     }
 
@@ -92,6 +95,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         validate(event);
         event.setUpdateTime(LocalDateTime.now());
         updateById(event);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE", "data", java.util.Map.of("eventId", event.getId(), "action", "updated")));
     }
 
     @Transactional
@@ -111,6 +115,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         event.setDispatchRemark(remark);
         event.setUpdateTime(LocalDateTime.now());
         updateById(event);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE", "data", java.util.Map.of("eventId", event.getId(), "action", "dispatched")));
     }
 
     @Transactional
@@ -126,6 +131,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         event.setDispatchUserId(event.getDispatchUserId() == null ? operatorId : event.getDispatchUserId());
         event.setUpdateTime(LocalDateTime.now());
         updateById(event);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE", "data", java.util.Map.of("eventId", event.getId(), "action", "finished")));
     }
 
     @Transactional
@@ -133,6 +139,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         EmergencyEvent event = getById(id);
         if (event == null) throw new BusinessException("应急事件不存在");
         removeById(id);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE", "data", java.util.Map.of("eventId", id, "action", "deleted")));
     }
 
     public List<RescueTarget> listTargets(Long eventId) {
@@ -159,6 +166,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         if (target.getFoundTime() == null) target.setFoundTime(LocalDateTime.now());
         target.setCreateTime(LocalDateTime.now());
         targetMapper.insert(target);
+        broadcastEventUpdate(target.getEmergencyEventId(), "targetCreated");
         return target;
     }
 
@@ -171,6 +179,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         validateTarget(target);
         target.setUpdateTime(LocalDateTime.now());
         targetMapper.updateById(target);
+        broadcastEventUpdate(exists.getEmergencyEventId(), "targetUpdated");
     }
 
     @Transactional
@@ -186,6 +195,12 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
     public void deleteTarget(Long id) {
         if (targetMapper.selectById(id) == null) throw new BusinessException("搜救目标不存在");
         targetMapper.deleteById(id);
+        broadcastEventUpdate(null, "targetDeleted");
+    }
+
+    private void broadcastEventUpdate(Long eventId, String action) {
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "EMERGENCY_UPDATE",
+                "data", java.util.Map.of("eventId", eventId == null ? 0 : eventId, "action", action)));
     }
 
     private void validate(EmergencyEvent event) {
@@ -291,3 +306,4 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
         if (id != null) ids.add(id);
     }
 }
+

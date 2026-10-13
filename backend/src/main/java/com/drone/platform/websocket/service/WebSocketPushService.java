@@ -48,6 +48,28 @@ public class WebSocketPushService {
         return delivered;
     }
 
+
+    public void broadcastToAll(Object payload) {
+        String text = toJson(payload);
+        userSessions.values().forEach(sessions -> {
+            for (WebSocketSession session : sessions) {
+                if (session.isOpen()) {
+                    try {
+                        synchronized (session) {
+                            session.sendMessage(new TextMessage(text));
+                        }
+                    } catch (IOException e) {
+                        log.warn("WebSocket broadcast failed", e);
+                    }
+                }
+            }
+        });
+    }
+
+    public boolean hasConnectedSessions() {
+        return userSessions.values().stream().anyMatch(sessions -> sessions.stream().anyMatch(WebSocketSession::isOpen));
+    }
+
     private String toJson(Object payload) {
         try {
             return objectMapper.writeValueAsString(payload);

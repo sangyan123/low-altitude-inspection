@@ -178,6 +178,7 @@ import GisMap from "../../components/GisMap.vue";
 import { createDeviceMarkerIcon, getDeviceStatusColor } from "../../utils/deviceMarker";
 import { getDeptList } from "../../api/system";
 import { getDashboardStats, type DashboardDevice, type DashboardStats } from "../../api/dashboard";
+import { subscribeToMessageType } from "../../utils/websocket";
 
 const loading = ref(false);
 const baseType = ref<"vec" | "img">("vec");
@@ -187,9 +188,10 @@ const selectedDevice = ref<DashboardDevice | null>(null);
 const statusChartRef = ref<HTMLElement>();
 
 let map: L.Map | null = null;
+let unsubscribers: (() => void)[] = [];
 let statusChart: echarts.ECharts | null = null;
 let hasFitBounds = false;
-let refreshTimer: number | undefined;
+
 const markers = new Map<number, L.Marker>();
 
 const statusColor = (status?: number | null) => getDeviceStatusColor(Number(status ?? 0));
@@ -335,6 +337,14 @@ async function loadDepts() {
   deptList.value = res.data.filter((item: any) => item.parentId !== 0);
 }
 
+function handleDashboardUpdate(data: any) {
+  if (!data) return;
+  stats.value = data;
+  selectedDevice.value = stats.value?.devices?.find((item: any) => item.id === selectedDevice.value?.id) || null;
+  renderMarkers();
+  updateChart();
+}
+
 onMounted(async () => {
   window.addEventListener("resize", handleResize);
   loadDepts();
@@ -344,13 +354,13 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
-  refreshTimer = window.setInterval(() => {
-    loadStats();
-  }, 30000);
+  // WebSocket real-time update replaces polling
+  unsubscribers.push(subscribeToMessageType("DASHBOARD_UPDATE", handleDashboardUpdate));
+
 });
 
 onBeforeUnmount(() => {
-  if (refreshTimer) window.clearInterval(refreshTimer);
+  unsubscribers.forEach((fn) => fn());
   window.removeEventListener("resize", handleResize);
   statusChart?.dispose();
   statusChart = null;
@@ -619,3 +629,6 @@ onBeforeUnmount(() => {
   margin-bottom: 0;
 }
 </style>
+
+
+

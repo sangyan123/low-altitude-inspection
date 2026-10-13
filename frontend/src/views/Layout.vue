@@ -261,17 +261,7 @@ function logout() {
   will-change: auto;
 }
 
-.sidebar-menu :deep(.el-sub-menu__title),
-.sidebar-menu :deep(.el-menu-item) {
-  transition: none !important;
-  animation: none !important;
-}
 
-.sidebar-menu :deep(.el-menu--inline) {
-  transition: none !important;
-  animation: none !important;
-  transform: none !important;
-}
 
 .sidebar-menu :deep(.el-menu-item .el-icon),
 .sidebar-menu :deep(.el-sub-menu__title .el-icon) {

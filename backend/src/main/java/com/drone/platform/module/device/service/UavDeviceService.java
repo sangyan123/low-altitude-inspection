@@ -8,6 +8,7 @@ import com.drone.platform.module.device.entity.UavDevice;
 import com.drone.platform.module.device.mapper.UavDeviceMapper;
 import com.drone.platform.module.device.entity.UavPayload;
 import com.drone.platform.module.device.mapper.UavPayloadMapper;
+import com.drone.platform.websocket.service.WebSocketPushService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -17,9 +18,11 @@ import java.util.List;
 public class UavDeviceService extends ServiceImpl<UavDeviceMapper, UavDevice> {
 
     private final UavPayloadMapper payloadMapper;
+    private final WebSocketPushService webSocketPushService;
 
-    public UavDeviceService(UavPayloadMapper payloadMapper) {
+    public UavDeviceService(UavPayloadMapper payloadMapper, WebSocketPushService webSocketPushService) {
         this.payloadMapper = payloadMapper;
+        this.webSocketPushService = webSocketPushService;
     }
 
     public Page<UavDevice> page(int current, int size, Long deptId, Integer status, Integer deviceType, String keyword) {
@@ -45,6 +48,7 @@ public class UavDeviceService extends ServiceImpl<UavDeviceMapper, UavDevice> {
             throw new BusinessException("设备序列号已存在");
         }
         save(device);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "DEVICE_POSITION", "data", device));
     }
 
     public void updateDevice(UavDevice device) {
@@ -52,11 +56,16 @@ public class UavDeviceService extends ServiceImpl<UavDeviceMapper, UavDevice> {
             throw new BusinessException("设备ID不能为空");
         }
         updateById(device);
+        UavDevice updated = getById(device.getId());
+        if (updated != null) {
+            webSocketPushService.broadcastToAll(java.util.Map.of("type", "DEVICE_POSITION", "data", updated));
+        }
     }
 
     public void deleteDevice(Long id) {
         payloadMapper.delete(new LambdaQueryWrapper<UavPayload>().eq(UavPayload::getDeviceId, id));
         removeById(id);
+        webSocketPushService.broadcastToAll(java.util.Map.of("type", "DEVICE_REMOVED", "data", java.util.Map.of("id", id)));
     }
 
     public List<UavPayload> getPayloads(Long deviceId) {
@@ -70,5 +79,11 @@ public class UavDeviceService extends ServiceImpl<UavDeviceMapper, UavDevice> {
         }
         device.setDeptId(deptId);
         updateById(device);
+        UavDevice updated = getById(device.getId());
+        if (updated != null) {
+            webSocketPushService.broadcastToAll(java.util.Map.of("type", "DEVICE_POSITION", "data", updated));
+        }
     }
 }
+
+

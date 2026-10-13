@@ -63,10 +63,11 @@ onMounted(() => {
   if (props.autoLocate && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (!map) return; // 组件已卸载，忽略异步回调
         // 浏览器返回WGS-84坐标
         const [lng, lat] = toMapCoord(pos.coords.longitude, pos.coords.latitude, getMapSource(props.baseType).coordSystem);
-        map!.setView([lat, lng], 13);
-        L.circle([lat, lng], { radius: pos.coords.accuracy || 500, color: "#409eff", weight: 1, fillOpacity: 0.08 }).addTo(map!);
+        map.setView([lat, lng], 13);
+        L.circle([lat, lng], { radius: pos.coords.accuracy || 500, color: "#409eff", weight: 1, fillOpacity: 0.08 }).addTo(map);
       },
       () => {/* 用户拒绝或定位失败，保持默认中心 */ },
       { enableHighAccuracy: true, timeout: 8000 }
@@ -98,3 +99,4 @@ defineExpose({ getMap: () => map });
   inset: 0;
 }
 </style>
+

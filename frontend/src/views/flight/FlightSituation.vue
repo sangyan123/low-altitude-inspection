@@ -66,6 +66,7 @@ import L from "leaflet";
 import GisMap from "../../components/GisMap.vue";
 import { createDeviceMarkerIcon } from "../../utils/deviceMarker";
 import { getDevicePage } from "../../api/system";
+import { subscribeToMessageType } from "../../utils/websocket";
 
 const baseType = ref<"vec" | "img">("vec");
 
@@ -74,7 +75,8 @@ const selectedDeviceId = ref<number | null>(null);
 const selected = ref<any>(null);
 let map: L.Map | null = null;
 const markers = new Map<number, L.Marker>();
-let timer: number | undefined;
+let unsubscribers: (() => void)[] = [];
+
 
 const commName = (c: number) => ({ 0: "离线", 1: "4G", 2: "5G", 3: "自组网", 4: "中继" }[c] || "-");
 const statusName = (s: number) => ({ 0: "离线", 1: "在线", 2: "飞行中", 3: "充电中", 4: "维护中" }[s] || "-");
@@ -89,7 +91,8 @@ function deviceIcon(d: any): L.DivIcon {
 function onMapReady(m: L.Map) {
   map = m;
   refresh();
-  timer = window.setInterval(refresh, 3000);
+  unsubscribers.push(subscribeToMessageType("DEVICE_POSITION", handleDeviceUpdate));
+  unsubscribers.push(subscribeToMessageType("DEVICE_REMOVED", handleDeviceRemoval));
 }
 
 async function refresh() {
@@ -100,6 +103,23 @@ async function refresh() {
   } catch {
     /* 轮询容错 */
   }
+}
+
+function handleDeviceUpdate(device: any) {
+  if (!device?.id) return;
+  const index = devices.value.findIndex((d) => d.id === device.id);
+  if (index >= 0) {
+    devices.value[index] = { ...devices.value[index], ...device };
+  } else {
+    devices.value.push(device);
+  }
+  renderMarkers();
+}
+
+function handleDeviceRemoval(data: any) {
+  if (!data?.id) return;
+  devices.value = devices.value.filter((d) => d.id !== data.id);
+  renderMarkers();
 }
 
 function renderMarkers() {
@@ -145,7 +165,7 @@ function locateDevice(d: any) {
 
 onMounted(() => {});
 onBeforeUnmount(() => {
-  if (timer) window.clearInterval(timer); // 地图销毁由GisMap组件负责
+  unsubscribers.forEach((fn) => fn()); // 地图销毁由GisMap组件负责
 });
 </script>
 
@@ -240,5 +260,9 @@ onBeforeUnmount(() => {
   padding: 20px 0;
 }
 </style>
+
+
+
+
 
 
