@@ -35,7 +35,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑航线' : '新增航线'" width="640px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑航线' : '新增航线'" width="1000px" destroy-on-close>
       <el-form :model="form" label-width="90px">
         <el-row :gutter="16">
           <el-col :span="12">
@@ -51,14 +51,8 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="航点数据" required>
-          <el-input
-            v-model="routeDataText"
-            type="textarea"
-            :rows="6"
-            placeholder='JSON数组，GCJ-02坐标，如：[{"lng":101.7,"lat":26.5,"alt":100},{"lng":101.72,"lat":26.52,"alt":100}]'
-          />
-          <div style="color: #909399; font-size: 12px; margin-top: 4px">地图绘制航线功能待接入高德地图，暂支持手动输入JSON</div>
+        <el-form-item label="航线绘制" required>
+          <RouteMapEditor v-model="routeDataText" @distance-change="onDistanceChange" />
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
@@ -88,6 +82,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { getRouteList, createRoute, updateRoute, deleteRoute } from "../../api/task";
+import RouteMapEditor from "../../components/RouteMapEditor.vue";
 
 const sceneOptions = ["秸秆禁烧", "河道巡查", "工地巡查", "森林防火", "耕地核查", "渔政巡河", "道路巡查"];
 
@@ -107,6 +102,12 @@ const form = reactive({
   estDurationMin: null as number | null,
   status: 1,
 });
+
+const lastDistanceKm = ref(0);
+
+function onDistanceChange(km: number) {
+  lastDistanceKm.value = km;
+}
 
 function pointCount(data: string): number {
   try {
@@ -152,12 +153,21 @@ async function handleSave() {
   try {
     const parsed = JSON.parse(routeDataText.value);
     if (!Array.isArray(parsed)) throw new Error("not array");
+    if (parsed.length < 2) {
+      ElMessage.warning("请在地图上至少绘制 2 个航点");
+      return;
+    }
     routeData = JSON.stringify(parsed);
   } catch {
-    ElMessage.warning("航点数据必须是JSON数组格式");
+    ElMessage.warning("请在地图上绘制航线（至少 2 个航点）");
     return;
   }
-  const payload = { ...form, routeData };
+  const payload = {
+    ...form,
+    routeData,
+    estDistanceKm: form.estDistanceKm ?? lastDistanceKm.value,
+    estDurationMin: form.estDurationMin ?? Math.max(1, Math.ceil(lastDistanceKm.value * 1.5)),
+  };
   if (isEdit.value) {
     await updateRoute(payload);
   } else {
@@ -184,3 +194,4 @@ onMounted(loadData);
   margin-bottom: 16px;
 }
 </style>
+
