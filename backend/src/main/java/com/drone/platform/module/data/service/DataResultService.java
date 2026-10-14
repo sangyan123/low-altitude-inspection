@@ -107,9 +107,9 @@ public class DataResultService extends ServiceImpl<DataResultMapper, DataResult>
                         .collect(Collectors.toMap(SysUser::getId, Function.identity()));
 
         for (DataResult result : results) {
-            SysDept dept = deptMap.get(result.getDeptId());
+            SysDept dept = result.getDeptId() == null ? null : deptMap.get(result.getDeptId());
             result.setDeptName(dept == null ? null : dept.getDeptName());
-            SysUser user = userMap.get(result.getSubmitUserId());
+            SysUser user = result.getSubmitUserId() == null ? null : userMap.get(result.getSubmitUserId());
             result.setSubmitUserName(user == null ? null
                     : StringUtils.hasText(user.getRealName()) ? user.getRealName() : user.getUsername());
             result.setDataTypeName(dataTypeName(result.getDataType()));

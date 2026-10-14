@@ -127,7 +127,7 @@
           <div v-if="form.fileUrl" class="uploaded-file">已上传：{{ form.fileName || form.fileUrl }}</div>
         </el-form-item>
 
-        <el-form-item v-if="category === 'media'" label="缩略图">
+        <el-form-item label="缩略图">
           <el-upload :show-file-list="false" :http-request="uploadThumbnail" accept=".jpg,.jpeg,.png,.webp">
             <el-button>
               <el-icon><Picture /></el-icon>

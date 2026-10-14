@@ -26,3 +26,6 @@ frontend/src/components/HelloWorld.vue
 
 # 运行时上传文件
 backend/uploads/
+
+# 演示素材（本地保留，不入库）
+photo/
