@@ -69,7 +69,8 @@ export function createRecognition(data: {
   lat?: number | null;
   provider?: string;
 }) {
-  return request.post("/ai/recognition", data);
+  // 智谱 GLM 视觉识别后端最长执行 60s，前端单独放宽超时避免"假超时"
+  return request.post("/ai/recognition", data, { timeout: 65000 });
 }
 
 export function confirmRecognition(id: number) {
