@@ -132,7 +132,7 @@ public class GlmVisionEngine implements AiRecognitionEngine {
 
         String rawResponse = null;
         BusinessException lastError = null;
-        for (int attempt = 1; attempt <= 3; attempt++) {
+        for (int attempt = 1; attempt <= 4; attempt++) {
             try {
                 rawResponse = restTemplate.postForObject(URI.create(endpoint),
                         new HttpEntity<>(requestBody, headers), String.class);
@@ -143,9 +143,9 @@ public class GlmVisionEngine implements AiRecognitionEngine {
                 log.warn("GLM vision API call failed: attempt={}, status={}, body={}", attempt, status, detail);
                 if (status == 429 || status >= 500) {
                     lastError = new BusinessException("GLM 识别请求失败：HTTP " + status + " - " + detail);
-                    if (attempt < 3) {
+                    if (attempt < 4) {
                         try {
-                            Thread.sleep(3000L * attempt);
+                            Thread.sleep(5000L * attempt);
                         } catch (InterruptedException ie) {
                             Thread.currentThread().interrupt();
                             throw new BusinessException("GLM 识别请求被中断");
