@@ -99,10 +99,10 @@ public class DataResultService extends ServiceImpl<DataResultMapper, DataResult>
         Set<Long> deptIds = collectIds(results, DataResult::getDeptId);
         Set<Long> userIds = collectIds(results, DataResult::getSubmitUserId);
 
-        Map<Long, SysDept> deptMap = deptIds.isEmpty() ? Map.of()
+        Map<Long, SysDept> deptMap = deptIds.isEmpty() ? new HashMap<>()
                 : deptMapper.selectBatchIds(deptIds).stream()
                         .collect(Collectors.toMap(SysDept::getId, Function.identity()));
-        Map<Long, SysUser> userMap = userIds.isEmpty() ? Map.of()
+        Map<Long, SysUser> userMap = userIds.isEmpty() ? new HashMap<>()
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(SysUser::getId, Function.identity()));
 

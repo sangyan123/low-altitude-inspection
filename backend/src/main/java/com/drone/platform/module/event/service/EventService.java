@@ -255,21 +255,21 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
         }
         Set<Long> recognitionIds = collectIds(events, EventInfo::getRecognitionId);
 
-        Map<Long, SysDept> deptMap = deptIds.isEmpty() ? Map.of()
+        Map<Long, SysDept> deptMap = deptIds.isEmpty() ? new HashMap<>()
                 : deptMapper.selectBatchIds(deptIds).stream()
                         .collect(Collectors.toMap(SysDept::getId, Function.identity()));
-        Map<Long, SysUser> userMap = userIds.isEmpty() ? Map.of()
+        Map<Long, SysUser> userMap = userIds.isEmpty() ? new HashMap<>()
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(SysUser::getId, Function.identity()));
 
-        Map<Long, AiRecognitionResult> recognitionMap = recognitionIds.isEmpty() ? Map.of()
+        Map<Long, AiRecognitionResult> recognitionMap = recognitionIds.isEmpty() ? new HashMap<>()
                 : recognitionMapper.selectBatchIds(recognitionIds).stream()
                         .collect(Collectors.toMap(AiRecognitionResult::getId, Function.identity()));
         Set<Long> algoIds = recognitionMap.values().stream()
                 .map(AiRecognitionResult::getAlgoId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, AiAlgorithm> algorithmMap = algoIds.isEmpty() ? Map.of()
+        Map<Long, AiAlgorithm> algorithmMap = algoIds.isEmpty() ? new HashMap<>()
                 : algorithmMapper.selectBatchIds(algoIds).stream()
                         .collect(Collectors.toMap(AiAlgorithm::getId, Function.identity()));
 
@@ -295,7 +295,7 @@ public class EventService extends ServiceImpl<EventInfoMapper, EventInfo> {
     private void fillLogOperators(List<EventHandleLog> logs) {
         if (logs == null || logs.isEmpty()) return;
         Set<Long> userIds = collectIds(logs, EventHandleLog::getOperatorId);
-        Map<Long, SysUser> userMap = userIds.isEmpty() ? Map.of()
+        Map<Long, SysUser> userMap = userIds.isEmpty() ? new HashMap<>()
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(SysUser::getId, Function.identity()));
         logs.forEach(log -> log.setOperatorName(getUserName(userMap, log.getOperatorId())));

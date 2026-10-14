@@ -240,10 +240,10 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
             addId(deviceIds, event.getAssignedDeviceId());
         }
 
-        Map<Long, SysUser> userMap = userIds.isEmpty() ? Map.of()
+        Map<Long, SysUser> userMap = userIds.isEmpty() ? new HashMap<>()
                 : userMapper.selectBatchIds(userIds).stream()
                         .collect(Collectors.toMap(SysUser::getId, Function.identity()));
-        Map<Long, UavDevice> deviceMap = deviceIds.isEmpty() ? Map.of()
+        Map<Long, UavDevice> deviceMap = deviceIds.isEmpty() ? new HashMap<>()
                 : deviceMapper.selectBatchIds(deviceIds).stream()
                         .collect(Collectors.toMap(UavDevice::getId, Function.identity()));
 
@@ -275,7 +275,7 @@ public class EmergencyService extends ServiceImpl<EmergencyEventMapper, Emergenc
                 .map(RescueTarget::getFoundByDevice)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, UavDevice> deviceMap = deviceIds.isEmpty() ? Map.of()
+        Map<Long, UavDevice> deviceMap = deviceIds.isEmpty() ? new HashMap<>()
                 : deviceMapper.selectBatchIds(deviceIds).stream()
                         .collect(Collectors.toMap(UavDevice::getId, Function.identity()));
 
